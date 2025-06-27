@@ -12,34 +12,19 @@ def crc16_ccitt(data, crc=0x0000):
         crc &= 0xFFFF  
     return crc
 
-def main():
-    # Настройка serial порта
-    port = serial.Serial(
-        port=PORT,
-        baudrate=9600,
-        parity=serial.PARITY_ODD,
-        stopbits=serial.STOPBITS_ONE,
-        bytesize=serial.EIGHTBITS,
-        timeout=1.0
-    )
-    
-    # Подготовка данных
-    data = [0x01, 0x01, 0x00]
-    
-    # Создание frame
+def foo(port, data):
     frame = [0x52, 0x00]
     frame.extend(data)
     
-    # Вычисление и добавление CRC
     crc = crc16_ccitt(frame)
-    frame.append(crc & 0xFF)        # младший байт
-    frame.append((crc >> 8) & 0xFF) # старший байт
+    frame.append(crc & 0xFF)        
+    frame.append((crc >> 8) & 0xFF) 
     
-    # Добавление завершающих байтов
     frame.extend([0x03, 0xFA])
     
     frame_bytes = bytes(frame)
     port.write(frame_bytes)
+    port.flush()
     
     time.sleep(1)
     
@@ -49,13 +34,10 @@ def main():
     if bytes_available > 0:
         response = port.read(bytes_available)
     else:
-        
         response = port.read(64)  
-    
+        
     if response:
         print(f"Received ({len(response)} bytes):", " ".join(f"{b:02X}" for b in response))
-        
-        
         if len(response) >= 2:
             print(f"Response header: {response[0]:02X} {response[1]:02X}")
     else:
@@ -63,7 +45,24 @@ def main():
   
     print("Sent:", " ".join(f"{b:02X}" for b in frame))
 
-    port.close()
+def main(): 
+    port = serial.Serial(
+        port=PORT,
+        baudrate=9600,
+        parity=serial.PARITY_ODD,
+        stopbits=serial.STOPBITS_ONE,
+        bytesize=serial.EIGHTBITS,
+        timeout=1.0
+    )
+    
+    print("=== Test 1 ===")
+    response1 = foo(port, [0x01, 0x01, 0x00])
+    
+    print("\n=== Test 2 ===")
+    response2 = foo(port, [0x02, 0x03, 0x04])
+    
+    print("\n=== Test 3 ===")
+    response3 = foo(port, [0xFF, 0x00, 0xFF])
 
 if __name__ == "__main__":
     main()
