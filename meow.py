@@ -1,7 +1,7 @@
 import serial
 import time
 
-PORT = "/dev/ttys025"
+PORT = "/dev/ttyS4"
 
 def crc16_ccitt(data, crc=0x0000):
     """Вычисляет CRC16-CCITT для данных"""
