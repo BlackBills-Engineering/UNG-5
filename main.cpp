@@ -40,14 +40,14 @@ int main() {
     frame.push_back(0xFA);
 
     // Записываем frame в файл для проверки
-    ofstream file("frame_output.bin", ios::binary);
-    if (file.is_open()) {
-        for (uint8_t byte : frame) {
-            file.write(reinterpret_cast<const char*>(&byte), 1);
-        }
-        file.close();
-        cout << "Frame saved to frame_output.bin" << endl;
-    }
+    // ofstream file("frame_output.bin", ios::binary);
+    // if (file.is_open()) {
+    //     for (uint8_t byte : frame) {
+    //         file.write(reinterpret_cast<const char*>(&byte), 1);
+    //     }
+    //     file.close();
+    //     cout << "Frame saved to frame_output.bin" << endl;
+    // }
 
     // Конвертируем vector<uint8_t> в string для отправки
     string frame_str(frame.begin(), frame.end());
