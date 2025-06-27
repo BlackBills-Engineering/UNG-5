@@ -509,7 +509,7 @@ int main() {
 #ifdef _WIN32
     std::string port = "COM1";
 #else
-    std::string port = "/dev/ttys004";
+    std::string port = "/dev/ttyS4";
 #endif
 
     MKR5Controller controller(port);
