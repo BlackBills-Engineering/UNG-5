@@ -1,6 +1,1 @@
-out
-build
-.vscode
-
-mkr5*
-*.md
+venv

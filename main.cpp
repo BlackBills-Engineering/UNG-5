@@ -8,7 +8,7 @@
 
 using namespace std;
 
-const string PORT_STRING = "/dev/ttyS4";
+const string PORT_STRING = "/dev/ttys025";
 
 uint16_t crc16_ccitt(const vector<uint8_t>& data, uint16_t crc = 0x0000) {
     for (uint8_t byte : data) {
@@ -55,13 +55,6 @@ int main() {
 
     cout << "Sent: ";
     for (uint8_t b : frame) printf("%02X ", b);
-    cout << endl;
-
-    string response = port.read(64);
-    cout << "Received (" << response.size() << "):\n";
-    for (char c : response) {
-        printf("%02X ", static_cast<uint8_t>(c));
-    }
     cout << endl;
 
     return 0;
