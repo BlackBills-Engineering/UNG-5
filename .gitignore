@@ -1,6 +1,6 @@
 out
 build
 .vscode
-serial
+
 mkr5*
 *.md
