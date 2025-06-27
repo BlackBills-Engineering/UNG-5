@@ -8,7 +8,7 @@
 
 using namespace std;
 
-const string PORT_STRING = "/dev/ttys004";
+const string PORT_STRING = "/dev/ttyS4";
 
 uint16_t crc16_ccitt(const vector<uint8_t>& data, uint16_t crc = 0x0000) {
     for (uint8_t byte : data) {
