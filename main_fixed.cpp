@@ -272,17 +272,26 @@ class MKR5Controller {
                                      int timeoutMs = 500) {
         std::vector<uint8_t> buffer;
         auto startTime = std::chrono::steady_clock::now();
+        auto lastDataTime = startTime;
 
         if (!isConnected) return {};
 
         while (buffer.size() < maxBytes) {
             auto currentTime = std::chrono::steady_clock::now();
-            auto elapsed =
+            auto totalElapsed =
                 std::chrono::duration_cast<std::chrono::milliseconds>(
                     currentTime - startTime)
                     .count();
+            auto silenceElapsed =
+                std::chrono::duration_cast<std::chrono::milliseconds>(
+                    currentTime - lastDataTime)
+                    .count();
 
-            if (elapsed > timeoutMs) break;
+            // Выход по общему таймауту
+            if (totalElapsed > timeoutMs) break;
+
+            // Выход по таймауту молчания после получения данных
+            if (buffer.size() > 0 && silenceElapsed > 50) break;
 
             uint8_t byte;
             bool dataReceived = false;
@@ -302,33 +311,53 @@ class MKR5Controller {
 
             if (dataReceived) {
                 buffer.push_back(byte);
-                // Если получили Stop Flag, возможно пакет закончен
-                if (byte == 0xFA && buffer.size() > 3) {
-                    // Проверим, не повторяется ли паттерн
-                    if (buffer.size() >= 6) {
-                        bool repeating = true;
-                        size_t patternSize = 3;  // FA 50 81
-                        for (size_t i = patternSize;
-                             i < buffer.size() - patternSize;
-                             i += patternSize) {
-                            if (buffer[i] != buffer[0] ||
-                                buffer[i + 1] != buffer[1] ||
-                                buffer[i + 2] != buffer[2]) {
-                                repeating = false;
-                                break;
-                            }
-                        }
-                        if (repeating && buffer.size() >= 9) {
-                            // Это повторяющийся паттерн, берем только первые 3
-                            // байта
-                            buffer.resize(3);
+                lastDataTime = std::chrono::steady_clock::now();
+
+                // Обнаружение валидного пакета данных
+                if (buffer.size() >= 8 && buffer.back() == 0xFA) {
+                    // Возможно это конец пакета, проверим структуру
+                    if (buffer.size() >= 3) {
+                        // Ждем немного, чтобы убедиться что данных больше нет
+                        std::this_thread::sleep_for(
+                            std::chrono::milliseconds(20));
+                        break;
+                    }
+                }
+
+                // Проверка на повторяющийся паттерн FA 50 81
+                if (buffer.size() >= 9) {
+                    size_t patternCount = 0;
+                    for (size_t i = 0; i <= buffer.size() - 3; i += 3) {
+                        if (i + 2 < buffer.size() && buffer[i] == 0xFA &&
+                            buffer[i + 1] == 0x50 && buffer[i + 2] == 0x81) {
+                            patternCount++;
+                        } else {
                             break;
                         }
                     }
+
+                    if (patternCount >= 3) {
+                        // Найден повторяющийся паттерн
+                        // Ищем начало полезных данных перед паттерном
+                        size_t cutPoint = 0;
+                        for (size_t i = 0; i < buffer.size() - 2; i++) {
+                            if (buffer[i] == 0xFA && buffer[i + 1] == 0x50 &&
+                                buffer[i + 2] == 0x81) {
+                                cutPoint = i;
+                                break;
+                            }
+                        }
+
+                        if (cutPoint > 0) {
+                            buffer.resize(cutPoint);
+                        } else {
+                            // Весь буфер - это паттерн, оставляем только первые
+                            // 3 байта
+                            buffer.resize(3);
+                        }
+                        break;
+                    }
                 }
-                startTime =
-                    std::chrono::steady_clock::now();  // Сброс таймаута при
-                                                       // получении данных
             } else {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
@@ -398,123 +427,309 @@ class MKR5Controller {
         return packet;
     }
 
+    std::vector<uint8_t> createAckPacket(uint8_t address, uint8_t txNum = 0) {
+        std::vector<uint8_t> packet;
+
+        // Адрес
+        packet.push_back(address);
+
+        // Контрольный байт для ACK: Master=1, TX#, Control=ACK(2)
+        uint8_t ctrl = 0x80 | ((txNum & 0x0F) << 4) | ACK;
+        packet.push_back(ctrl);
+
+        // Stop Flag
+        packet.push_back(0xFA);
+
+        return packet;
+    }
+
+    bool sendAck(uint8_t address, uint8_t txNum = 0) {
+        auto packet = createAckPacket(address, txNum);
+        std::cout << "Отправка ACK для адреса 0x" << std::hex
+                  << static_cast<int>(address) << std::dec << std::endl;
+        return sendData(packet);
+    }
+
     PumpStatus parseResponse(const std::vector<uint8_t>& response) {
         PumpStatus status;
 
         std::cout << "Анализ ответа размером " << response.size() << " байт: ";
-        for (uint8_t byte : response) {
+        for (size_t i = 0; i < std::min(response.size(), size_t(20)); i++) {
+            std::cout << std::hex << std::uppercase << std::setw(2)
+                      << std::setfill('0') << static_cast<int>(response[i])
+                      << " ";
+        }
+        if (response.size() > 20) {
+            std::cout << "... (показаны первые 20 байт)";
+        }
+        std::cout << std::dec << std::endl;
+
+        // Анализ структуры данных из вашего примера:
+        // Получен: 01 5F 37 03 FA 50 81 FA...
+        // Это может быть: [DATA_SIZE] [OPC] [CRC_L] [ETX] [STOP_FLAG]
+        // [повторяющийся паттерн]
+
+        if (response.size() >= 5) {
+            // Проверяем, есть ли валидная структура в начале
+            uint8_t firstByte = response[0];   // 01 - размер данных или адрес?
+            uint8_t secondByte = response[1];  // 5F - OPC или контроль?
+            uint8_t thirdByte = response[2];   // 37 - CRC_L?
+            uint8_t fourthByte = response[3];  // 03 - ETX?
+            uint8_t fifthByte = response[4];   // FA - Stop Flag?
+
+            std::cout << "Разбор структуры:" << std::endl;
+            std::cout << "  Байт 0: 0x" << std::hex
+                      << static_cast<int>(firstByte)
+                      << " (возможно размер данных: " << std::dec
+                      << static_cast<int>(firstByte) << ")" << std::endl;
+            std::cout << "  Байт 1: 0x" << std::hex
+                      << static_cast<int>(secondByte) << std::dec << std::endl;
+            std::cout << "  Байт 2: 0x" << std::hex
+                      << static_cast<int>(thirdByte) << std::dec << std::endl;
+            std::cout << "  Байт 3: 0x" << std::hex
+                      << static_cast<int>(fourthByte);
+            if (fourthByte == 0x03) std::cout << " (ETX)";
+            std::cout << std::dec << std::endl;
+            std::cout << "  Байт 4: 0x" << std::hex
+                      << static_cast<int>(fifthByte);
+            if (fifthByte == 0xFA) std::cout << " (Stop Flag)";
+            std::cout << std::dec << std::endl;
+
+            // Если это структура [SIZE][OPC][CRC][ETX][STOP]
+            if (fourthByte == 0x03 && fifthByte == 0xFA) {
+                std::cout << "Найдена структура: SIZE-OPC-CRC-ETX-STOP"
+                          << std::endl;
+
+                // Интерпретируем как ответ устройства
+                uint8_t dataSize = firstByte;
+                uint8_t opc = secondByte;
+
+                std::cout << "  Размер данных: " << static_cast<int>(dataSize)
+                          << std::endl;
+                std::cout << "  OPC: 0x" << std::hex << static_cast<int>(opc)
+                          << std::dec << std::endl;
+
+                // Разбираем OPC согласно протоколу MKR5
+                uint8_t responseType = (opc >> 4) & 0x0F;
+                uint8_t nozzleNum = opc & 0x0F;
+
+                std::cout << "  Тип ответа: " << static_cast<int>(responseType)
+                          << std::endl;
+                std::cout << "  Номер сопла: " << static_cast<int>(nozzleNum)
+                          << std::endl;
+
+                // Если есть дополнительные данные между OPC и CRC
+                if (dataSize > 1) {
+                    std::cout << "  Дополнительных данных нет (dataSize=1, "
+                                 "только OPC)"
+                              << std::endl;
+                } else {
+                    std::cout << "  Дополнительные данные: отсутствуют"
+                              << std::endl;
+                }
+
+                // Создаем статус на основе анализа
+                status.address = 0x50;  // Предполагаемый адрес
+                status.isValid = true;
+
+                // Анализируем тип ответа
+                switch (responseType) {
+                    case NOZZLE_STATUS:
+                        status.status = IDLE;  // Базовый статус
+                        status.statusDescription = "Статус сопла (из OPC)";
+                        break;
+                    case ERROR_CODE:
+                        status.status = IDLE;
+                        status.statusDescription = "Код ошибки";
+                        status.errorFlag = true;
+                        break;
+                    default:
+                        status.status = IDLE;
+                        status.statusDescription = "Неизвестный тип ответа: " +
+                                                   std::to_string(responseType);
+                        break;
+                }
+
+                return status;
+            }
+        }
+
+        // Проверка на повторяющийся паттерн FA 50 81
+        if (response.size() >= 3 && response[0] == 0xFA &&
+            response[1] == 0x50 && response[2] == 0x81) {
+            std::cout
+                << "Обнаружен паттерн FA 50 81 - poll/ack от устройства 0x50"
+                << std::endl;
+
+            status.address = 0x50;
+            status.status = IDLE;
+            status.statusDescription = "Устройство отвечает на POLL";
+            status.isValid = true;
+            return status;
+        }
+
+        // Стандартный разбор пакета (если адрес в начале)
+        if (response.size() >= 3) {
+            status.address = response[0];
+            uint8_t ctrl = response[1];
+
+            std::cout << "Стандартный разбор - Адрес: 0x" << std::hex
+                      << static_cast<int>(status.address) << ", Контроль: 0x"
+                      << static_cast<int>(ctrl) << std::dec << std::endl;
+
+            // Проверка типа ответа
+            uint8_t controlCode = ctrl & 0x0F;
+            bool isMaster = (ctrl & 0x80) != 0;
+            uint8_t txNum = (ctrl >> 4) & 0x0F;
+
+            std::cout << "  Тип управления: " << static_cast<int>(controlCode)
+                      << ", Master: " << (isMaster ? "да" : "нет")
+                      << ", TX#: " << static_cast<int>(txNum) << std::endl;
+
+            // Если это простой ACK, EOT или подобное
+            if (response.size() == 3) {
+                switch (controlCode) {
+                    case ACK:
+                        std::cout << "Получен ACK" << std::endl;
+                        break;
+                    case NACK:
+                        std::cout << "Получен NACK" << std::endl;
+                        break;
+                    case POLL:
+                        std::cout << "Получен POLL" << std::endl;
+                        break;
+                    default:
+                        std::cout << "Получен неизвестный короткий ответ"
+                                  << std::endl;
+                        break;
+                }
+
+                // Для коротких ответов создаем базовый статус
+                status.address = response[0];
+                status.status = IDLE;
+                status.statusDescription =
+                    "Статус неопределен (короткий ответ)";
+                status.isValid = true;
+                return status;
+            }
+
+            // Для длинных пакетов с данными
+            if (controlCode == DATA && response.size() >= 7) {
+                size_t dataSize = response[2];
+                std::cout << "Размер данных: " << static_cast<int>(dataSize)
+                          << std::endl;
+
+                if (response.size() >= 6 + dataSize) {
+                    uint8_t opc = response[3];
+                    uint8_t responseType = (opc >> 4) & 0x0F;
+                    uint8_t nozzleNum = opc & 0x0F;
+
+                    std::cout
+                        << "Тип ответа: " << static_cast<int>(responseType)
+                        << ", Сопло: " << static_cast<int>(nozzleNum)
+                        << std::endl;
+
+                    if (responseType == NOZZLE_STATUS && dataSize >= 2) {
+                        uint8_t statusByte = response[4];
+                        status.status = statusByte & 0x0F;
+                        status.nozzleOn = (statusByte & 0x10) != 0;
+                        status.rfTagSensed = (statusByte & 0x20) != 0;
+                        status.errorFlag = (statusByte & 0x40) != 0;
+                        status.statusDescription =
+                            getStatusDescription(status.status);
+                        status.isValid = true;
+
+                        std::cout << "Статус байт: 0x" << std::hex
+                                  << static_cast<int>(statusByte) << std::dec
+                                  << " -> " << status.statusDescription
+                                  << std::endl;
+                    }
+                }
+            }
+        }
+
+        std::cout << "Не удалось разобрать структуру пакета" << std::endl;
+        return status;
+    }
+
+    // Усовершенствованный метод для анализа сырых данных протокола
+    void analyzeProtocolData(const std::vector<uint8_t>& data) {
+        std::cout << "\n=== Детальный анализ протокола ===" << std::endl;
+
+        if (data.empty()) {
+            std::cout << "Нет данных для анализа" << std::endl;
+            return;
+        }
+
+        std::cout << "Размер данных: " << data.size() << " байт" << std::endl;
+        std::cout << "Hex данные: ";
+        for (auto byte : data) {
             std::cout << std::hex << std::uppercase << std::setw(2)
                       << std::setfill('0') << static_cast<int>(byte) << " ";
         }
         std::cout << std::dec << std::endl;
 
-        // Проверка на повторяющийся паттерн FA 50 81
-        if (response.size() >= 3 && response[0] == 0xFA &&
-            response[1] == 0x50 && response[2] == 0x81) {
-            std::cout << "Обнаружен повторяющийся паттерн FA 50 81 - это POLL "
-                         "от другого устройства"
-                      << std::endl;
-
-            // Это может быть ответ на POLL от другого мастера или эхо наших
-            // данных Попробуем интерпретировать как статус
-            status.address = 0x50;
-            status.status = IDLE;  // Предполагаем статус IDLE
-            status.statusDescription = "Простой (по паттерну FA 50 81)";
-            status.isValid = true;
-
-            return status;
-        }
-
-        // Стандартный разбор пакета
-        if (response.size() < 3) {
-            std::cout << "Ответ слишком короткий" << std::endl;
-            return status;
-        }
-
-        // Проверка Stop Flag
-        if (response.back() != 0xFA) {
-            std::cout << "Неверный Stop Flag: " << std::hex
-                      << static_cast<int>(response.back()) << std::dec
-                      << std::endl;
-            // Не возвращаем, попробуем разобрать дальше
-        }
-
-        status.address = response[0];
-        uint8_t ctrl = response[1];
-
-        std::cout << "Адрес: 0x" << std::hex << static_cast<int>(status.address)
-                  << ", Контроль: 0x" << static_cast<int>(ctrl) << std::dec
-                  << std::endl;
-
-        // Проверка типа ответа
-        uint8_t controlCode = ctrl & 0x0F;
-        bool isMaster = (ctrl & 0x80) != 0;
-        uint8_t txNum = (ctrl >> 4) & 0x0F;
-
-        std::cout << "Тип управления: " << static_cast<int>(controlCode)
-                  << ", Master: " << isMaster
-                  << ", TX#: " << static_cast<int>(txNum) << std::endl;
-
-        // Если это простой ACK, EOT или подобное
-        if (response.size() == 3) {
-            switch (controlCode) {
-                case ACK:
-                    std::cout << "Получен ACK" << std::endl;
-                    break;
-                case NACK:
-                    std::cout << "Получен NACK" << std::endl;
-                    break;
-                case POLL:
-                    std::cout << "Получен POLL" << std::endl;
-                    break;
-                default:
-                    std::cout << "Получен неизвестный короткий ответ"
-                              << std::endl;
-                    break;
-            }
-
-            // Для коротких ответов создаем базовый статус
-            status.address = response[0];
-            status.status = IDLE;
-            status.statusDescription = "Статус неопределен (короткий ответ)";
-            status.isValid = true;
-            return status;
-        }
-
-        // Для длинных пакетов с данными
-        if (controlCode == DATA && response.size() >= 7) {
-            size_t dataSize = response[2];
-            std::cout << "Размер данных: " << static_cast<int>(dataSize)
-                      << std::endl;
-
-            if (response.size() >= 6 + dataSize) {
-                uint8_t opc = response[3];
-                uint8_t responseType = (opc >> 4) & 0x0F;
-                uint8_t nozzleNum = opc & 0x0F;
-
-                std::cout << "Тип ответа: " << static_cast<int>(responseType)
-                          << ", Сопло: " << static_cast<int>(nozzleNum)
+        // Ищем возможные структуры пакетов
+        for (size_t i = 0; i < data.size(); i++) {
+            if (data[i] == 0xFA && i + 2 < data.size()) {
+                std::cout << "\nНайден Stop Flag на позиции " << i << std::endl;
+                std::cout << "  Следующие 2 байта: 0x" << std::hex
+                          << static_cast<int>(data[i + 1]) << " 0x"
+                          << static_cast<int>(data[i + 2]) << std::dec
                           << std::endl;
 
-                if (responseType == NOZZLE_STATUS && dataSize >= 2) {
-                    uint8_t statusByte = response[4];
-                    status.status = statusByte & 0x0F;
-                    status.nozzleOn = (statusByte & 0x10) != 0;
-                    status.rfTagSensed = (statusByte & 0x20) != 0;
-                    status.errorFlag = (statusByte & 0x40) != 0;
-                    status.statusDescription =
-                        getStatusDescription(status.status);
-                    status.isValid = true;
-
-                    std::cout << "Статус байт: 0x" << std::hex
-                              << static_cast<int>(statusByte) << std::dec
-                              << " -> " << status.statusDescription
+                if (data[i + 1] == 0x50 && data[i + 2] == 0x81) {
+                    std::cout << "  -> Это POLL от устройства 0x50"
                               << std::endl;
                 }
             }
-        }
 
-        return status;
+            // Поиск возможных адресов устройств
+            if (data[i] >= 0x50 && data[i] <= 0x6F) {
+                std::cout << "\nВозможный адрес устройства на позиции " << i
+                          << ": 0x" << std::hex << static_cast<int>(data[i])
+                          << std::dec << std::endl;
+
+                if (i + 1 < data.size()) {
+                    uint8_t ctrl = data[i + 1];
+                    uint8_t controlCode = ctrl & 0x0F;
+                    bool isMaster = (ctrl & 0x80) != 0;
+                    uint8_t txNum = (ctrl >> 4) & 0x0F;
+
+                    std::cout << "  Контрольный байт: 0x" << std::hex
+                              << static_cast<int>(ctrl) << std::dec
+                              << std::endl;
+                    std::cout << "    Master: " << (isMaster ? "да" : "нет")
+                              << std::endl;
+                    std::cout << "    TX#: " << static_cast<int>(txNum)
+                              << std::endl;
+                    std::cout << "    Код управления: "
+                              << static_cast<int>(controlCode);
+
+                    switch (controlCode) {
+                        case POLL:
+                            std::cout << " (POLL)";
+                            break;
+                        case ACK:
+                            std::cout << " (ACK)";
+                            break;
+                        case NACK:
+                            std::cout << " (NACK)";
+                            break;
+                        case DATA:
+                            std::cout << " (DATA)";
+                            break;
+                        case ACKPOLL:
+                            std::cout << " (ACKPOLL)";
+                            break;
+                        default:
+                            std::cout << " (неизвестно)";
+                            break;
+                    }
+                    std::cout << std::endl;
+                }
+            }
+        }
     }
 
     std::string getStatusDescription(uint8_t status) {
@@ -656,34 +871,88 @@ class MKR5Controller {
 
         // 1. Простой POLL
         std::cout << "\n1. Тест POLL:" << std::endl;
+        clearBuffers();
         bool pollResult = pollPump(address);
         std::cout << "Результат POLL: " << (pollResult ? "Успех" : "Неудача")
                   << std::endl;
 
-        // 2. Запрос статуса
-        std::cout << "\n2. Тест запроса статуса:" << std::endl;
-        auto status = getPumpStatus(address);
-        printPumpStatus(status);
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
-        // 3. Попробуем другие команды
-        std::cout << "\n3. Тест команды сброса:" << std::endl;
+        // 2. Запрос статуса с детальным анализом
+        std::cout << "\n2. Тест запроса статуса с детальным анализом:"
+                  << std::endl;
+        clearBuffers();
+
+        auto packet = createDataPacket(address, RETURN_STATUS, 1);
+        if (sendData(packet)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(150));
+
+            auto response = receiveData(128, 1000);
+            if (!response.empty()) {
+                std::cout << "Полученный ответ:" << std::endl;
+                analyzeProtocolData(response);
+
+                // Пробуем стандартный разбор
+                auto status = parseResponse(response);
+                printPumpStatus(status);
+
+                // Если получили данные, отправляем ACK
+                if (response.size() >= 5) {
+                    std::cout << "\nОтправляем ACK..." << std::endl;
+                    sendAck(address, 1);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+                    // Проверяем дополнительные данные
+                    auto extraData = receiveData(64, 300);
+                    if (!extraData.empty()) {
+                        std::cout << "Дополнительные данные после ACK:"
+                                  << std::endl;
+                        analyzeProtocolData(extraData);
+                    }
+                }
+            } else {
+                std::cout << "Нет ответа на запрос статуса" << std::endl;
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+        // 3. Тест других команд
+        std::cout << "\n3. Тест команды получения информации о заправке:"
+                  << std::endl;
+        clearBuffers();
+        auto fillingPacket = createDataPacket(address, RETURN_FILLING_INFO, 1);
+        if (sendData(fillingPacket)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(150));
+            auto response = receiveData(128, 500);
+            if (!response.empty()) {
+                std::cout << "Ответ на запрос информации о заправке:"
+                          << std::endl;
+                analyzeProtocolData(response);
+            } else {
+                std::cout << "Нет ответа на запрос информации о заправке"
+                          << std::endl;
+            }
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+        // 4. Осторожно тестируем сброс
+        std::cout << "\n4. Тест команды сброса (осторожно!):" << std::endl;
         clearBuffers();
         auto resetPacket = createDataPacket(address, RESET_NOZZLE, 1);
         if (sendData(resetPacket)) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
             auto response = receiveData(128, 500);
             if (!response.empty()) {
-                std::cout << "Ответ на сброс: ";
-                for (uint8_t byte : response) {
-                    std::cout << std::hex << std::uppercase << std::setw(2)
-                              << std::setfill('0') << static_cast<int>(byte)
-                              << " ";
-                }
-                std::cout << std::dec << std::endl;
+                std::cout << "Ответ на сброс:" << std::endl;
+                analyzeProtocolData(response);
             } else {
                 std::cout << "Нет ответа на сброс" << std::endl;
             }
         }
+
+        std::cout << "\n=== Тестирование завершено ===" << std::endl;
     }
 };
 
