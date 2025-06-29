@@ -1,57 +1,114 @@
-PS C:\UNG__\UNG-5> python .\diagnose_pos_difference.py 
-2025-06-30 03:43:52,336 - INFO - 🚀 Starting POS System Comparison Diagnostic
-2025-06-30 03:43:52,336 - INFO - ============================================================
-2025-06-30 03:43:52,336 - INFO - This will test various configurations to find what
-2025-06-30 03:43:52,336 - INFO - makes the original POS system work vs our code.
-2025-06-30 03:43:52,336 - INFO - ============================================================
-2025-06-30 03:43:52,336 - INFO - 🔧 Testing different serial port configurations...
-2025-06-30 03:43:52,336 - INFO - 
-📡 Test 1/8: 9600-N-8-1 - {'baud': 9600, 'parity': 'N', 'stopbits': 1, 'bytesize': 8, 'name': '9600-N-8-1'}
-2025-06-30 03:43:52,545 - INFO -    📤 Sending: 5081010100BFBA03FA
-2025-06-30 03:43:53,751 - INFO -    📥 Received: 5081010100BFBA03FA
-2025-06-30 03:43:53,752 - WARNING -    ⚠️  ECHO detected with this config
-2025-06-30 03:43:53,803 - INFO - 
-📡 Test 2/8: 19200-N-8-1 - {'baud': 19200, 'parity': 'N', 'stopbits': 1, 'bytesize': 8, 'name': '19200-N-8-1'}
-2025-06-30 03:43:53,925 - INFO -    📤 Sending: 5081010100BFBA03FA
-2025-06-30 03:43:55,129 - INFO -    📥 Received: 5081010100BFBA03FA
-2025-06-30 03:43:55,131 - WARNING -    ⚠️  ECHO detected with this config
-2025-06-30 03:43:55,172 - INFO - 
-📡 Test 3/8: 9600-E-8-1 - {'baud': 9600, 'parity': 'E', 'stopbits': 1, 'bytesize': 8, 'name': '9600-E-8-1'}
-2025-06-30 03:43:55,295 - INFO -    📤 Sending: 5081010100BFBA03FA
-2025-06-30 03:43:56,497 - INFO -    📥 Received: 5081010100BFBA03FA
-2025-06-30 03:43:56,497 - WARNING -    ⚠️  ECHO detected with this config
-2025-06-30 03:43:56,548 - INFO - 
-📡 Test 4/8: 19200-E-8-1 - {'baud': 19200, 'parity': 'E', 'stopbits': 1, 'bytesize': 8, 'name': '19200-E-8-1'}
-2025-06-30 03:43:56,673 - INFO -    📤 Sending: 5081010100BFBA03FA
-2025-06-30 03:43:57,877 - INFO -    📥 Received: 5081010100BFBA03FA
-2025-06-30 03:43:57,883 - WARNING -    ⚠️  ECHO detected with this config
-2025-06-30 03:43:57,924 - INFO - 
-📡 Test 5/8: 9600-O-8-1 - {'baud': 9600, 'parity': 'O', 'stopbits': 1, 'bytesize': 8, 'name': '9600-O-8-1'}
-2025-06-30 03:43:58,048 - INFO -    📤 Sending: 5081010100BFBA03FA
-2025-06-30 03:43:59,255 - INFO -    📥 Received: 5081010100BFBA03FA
-2025-06-30 03:43:59,255 - WARNING -    ⚠️  ECHO detected with this config
-2025-06-30 03:43:59,307 - INFO - 
-📡 Test 6/8: 19200-O-8-1 - {'baud': 19200, 'parity': 'O', 'stopbits': 1, 'bytesize': 8, 'name': '19200-O-8-1'}
-2025-06-30 03:43:59,430 - INFO -    📤 Sending: 5081010100BFBA03FA
-2025-06-30 03:44:00,638 - INFO -    📥 Received: 5081010100BFBA03FA
-2025-06-30 03:44:00,638 - WARNING -    ⚠️  ECHO detected with this config
-2025-06-30 03:44:00,680 - INFO - 
-📡 Test 7/8: 9600-N-8-2 - {'baud': 9600, 'parity': 'N', 'stopbits': 2, 'bytesize': 8, 'name': '9600-N-8-2'}
-2025-06-30 03:44:00,804 - INFO -    📤 Sending: 5081010100BFBA03FA
-2025-06-30 03:44:02,009 - INFO -    📥 Received: 5081010100BFBA03FA
-2025-06-30 03:44:02,009 - WARNING -    ⚠️  ECHO detected with this config
-2025-06-30 03:44:02,061 - INFO - 
-📡 Test 8/8: 19200-N-8-2 - {'baud': 19200, 'parity': 'N', 'stopbits': 2, 'bytesize': 8, 'name': '19200-N-8-2'}
-2025-06-30 03:44:02,185 - INFO -    📤 Sending: 5081010100BFBA03FA
-2025-06-30 03:44:03,388 - INFO -    📥 Received: 5081010100BFBA03FA
-2025-06-30 03:44:03,388 - WARNING -    ⚠️  ECHO detected with this config
-2025-06-30 03:44:03,430 - INFO - 
-🔧 Testing RTS/DTR control for RS485 direction...
-2025-06-30 03:44:03,430 - INFO - 
-📡 RTS/DTR Test 1/7: {'rtscts': False, 'dsrdtr': False, 'rts': None, 'dtr': None}
-2025-06-30 03:44:03,554 - INFO -    📤 Sending: 5081010100BFBA03FA
-2025-06-30 03:44:04,771 - INFO -    📥 Received: 5081010100BFBA03FA
-2025-06-30 03:44:04,772 - WARNING -    ⚠️  ECHO detected
-2025-06-30 03:44:04,813 - INFO - 
-📡 RTS/DTR Test 2/7: {'rtscts': True, 'dsrdtr': False, 'rts': None, 'dtr': None}
-2025-06-30 03:44:04,936 - INFO -    📤 Sending: 5081010100BFBA03FA
+PS C:\UNG__\UNG-5> python .\verify_crc.py 
+2025-06-30 03:56:10,552 - INFO - 🚀 Starting CRC-16 Verification for MKR5 Protocol
+2025-06-30 03:56:10,552 - INFO - ============================================================
+2025-06-30 03:56:10,552 - INFO - Testing our CRC implementation against MKR5 specification:
+2025-06-30 03:56:10,552 - INFO - - CRC-16 calculated from ADR to last byte of data
+2025-06-30 03:56:10,552 - INFO - - CRC initialized to 0000h
+2025-06-30 03:56:10,553 - INFO - - Recalculated CRC from ADR to CRC-H must be 0000h
+2025-06-30 03:56:10,553 - INFO - ============================================================
+2025-06-30 03:56:10,553 - INFO -
+🔍 Manual CRC calculation test
+2025-06-30 03:56:10,553 - INFO - ============================================================
+2025-06-30 03:56:10,553 - INFO - Test data: 5081010100
+2025-06-30 03:56:10,553 - INFO - Bytes: ['0x50', '0x81', '0x01', '0x01', '0x00']
+2025-06-30 03:56:10,553 - INFO - CCITT: 0xBABF (CRC_L=0xBF, CRC_H=0xBA)
+2025-06-30 03:56:10,554 - INFO - Modbus: 0x609C (CRC_L=0x9C, CRC_H=0x60)
+2025-06-30 03:56:10,554 - INFO - ANSI: 0x60B8 (CRC_L=0xB8, CRC_H=0x60)
+2025-06-30 03:56:10,554 - INFO - 🔍 Testing CRC calculation on known MKR5 frames
+2025-06-30 03:56:10,554 - INFO - ============================================================
+2025-06-30 03:56:10,554 - INFO -
+📊 Testing: Status Request
+2025-06-30 03:56:10,555 - INFO -    Description: Standard status request to pump 0x50
+2025-06-30 03:56:10,555 - INFO -    Frame: 5081010100BFBA03FA
+2025-06-30 03:56:10,555 - INFO -
+   🔧 Algorithm: CCITT
+2025-06-30 03:56:10,555 - INFO -       Message Data: 5081010100
+2025-06-30 03:56:10,555 - INFO -       Received CRC: 0xBABF
+2025-06-30 03:56:10,555 - INFO -       Calculated CRC: 0xBABF
+2025-06-30 03:56:10,556 - INFO -       CRC Match: ✅
+2025-06-30 03:56:10,556 - INFO -       Verification CRC: 0xAF50
+2025-06-30 03:56:10,556 - INFO -       Verification Pass: ❌
+2025-06-30 03:56:10,556 - INFO -       ⚠️  CRC matches but verification failed
+2025-06-30 03:56:10,556 - INFO -
+   🔧 Algorithm: MODBUS
+2025-06-30 03:56:10,556 - INFO -       Message Data: 5081010100
+2025-06-30 03:56:10,557 - INFO -       Received CRC: 0xBABF
+2025-06-30 03:56:10,557 - INFO -       Calculated CRC: 0x609C
+2025-06-30 03:56:10,559 - INFO -       CRC Match: ❌
+2025-06-30 03:56:10,559 - INFO -       Verification CRC: 0xAB98
+2025-06-30 03:56:10,560 - INFO -       Verification Pass: ❌
+2025-06-30 03:56:10,560 - INFO -
+   🔧 Algorithm: ANSI
+2025-06-30 03:56:10,560 - INFO -       Message Data: 5081010100
+2025-06-30 03:56:10,560 - INFO -       Received CRC: 0xBABF
+2025-06-30 03:56:10,560 - INFO -       Calculated CRC: 0x60B8
+2025-06-30 03:56:10,561 - INFO -       CRC Match: ❌
+2025-06-30 03:56:10,561 - INFO -       Verification CRC: 0xAB83
+2025-06-30 03:56:10,561 - INFO -       Verification Pass: ❌
+2025-06-30 03:56:10,561 - INFO -
+📊 Testing: Price Update
+2025-06-30 03:56:10,561 - INFO -    Description: Price update command with 8 nozzles
+2025-06-30 03:56:10,562 - INFO -    Frame: 50810518015500015500015500015500015500015500015500015500617003FA
+2025-06-30 03:56:10,563 - INFO - 
+   🔧 Algorithm: CCITT
+2025-06-30 03:56:10,567 - INFO -       Message Data: 50810518015500015500015500015500015500015500015500015500
+2025-06-30 03:56:10,567 - INFO -       Received CRC: 0x7061
+2025-06-30 03:56:10,567 - INFO -       Calculated CRC: 0x7061
+2025-06-30 03:56:10,567 - INFO -       CRC Match: ✅
+2025-06-30 03:56:10,567 - INFO -       Verification CRC: 0x3252
+2025-06-30 03:56:10,568 - INFO -       Verification Pass: ❌
+2025-06-30 03:56:10,568 - INFO -       ⚠️  CRC matches but verification failed
+2025-06-30 03:56:10,568 - INFO -
+   🔧 Algorithm: MODBUS
+2025-06-30 03:56:10,569 - INFO -       Message Data: 50810518015500015500015500015500015500015500015500015500
+2025-06-30 03:56:10,569 - INFO -       Received CRC: 0x7061
+2025-06-30 03:56:10,569 - INFO -       Calculated CRC: 0x2C3E
+2025-06-30 03:56:10,569 - INFO -       CRC Match: ❌
+2025-06-30 03:56:10,569 - INFO -       Verification CRC: 0xC939
+
+2025-06-30 03:56:10,569 - INFO -       Verification Pass: ❌
+2025-06-30 03:56:10,570 - INFO -
+   🔧 Algorithm: ANSI
+2025-06-30 03:56:10,570 - INFO -       Message Data: 50810518015500015500015500015500015500015500015500015500
+2025-06-30 03:56:10,570 - INFO -       Received CRC: 0x7061
+2025-06-30 03:56:10,570 - INFO -       Calculated CRC: 0xC696
+2025-06-30 03:56:10,570 - INFO -       CRC Match: ❌
+2025-06-30 03:56:10,571 - INFO -       Verification CRC: 0x86C7
+2025-06-30 03:56:10,571 - INFO -       Verification Pass: ❌
+2025-06-30 03:56:10,571 - INFO -
+📊 Testing: Switch Off Command
+2025-06-30 03:56:10,572 - INFO -    Description: Switch off command to pump 0x50
+2025-06-30 03:56:10,572 - INFO -    Frame: 50810100009F9A03FA
+2025-06-30 03:56:10,572 - INFO -
+   🔧 Algorithm: CCITT
+2025-06-30 03:56:10,573 - INFO -       Message Data: 5081010000
+2025-06-30 03:56:10,573 - INFO -       Received CRC: 0x9A9F
+2025-06-30 03:56:10,573 - INFO -       Calculated CRC: 0x898E
+2025-06-30 03:56:10,573 - INFO -       CRC Match: ❌
+2025-06-30 03:56:10,574 - INFO -       Verification CRC: 0xFB60
+2025-06-30 03:56:10,574 - INFO -       Verification Pass: ❌
+2025-06-30 03:56:10,574 - INFO -
+   🔧 Algorithm: MODBUS
+2025-06-30 03:56:10,574 - INFO -       Message Data: 5081010000
+2025-06-30 03:56:10,574 - INFO -       Received CRC: 0x9A9F
+2025-06-30 03:56:10,575 - INFO -       Calculated CRC: 0xF09D
+2025-06-30 03:56:10,575 - INFO -       CRC Match: ❌
+2025-06-30 03:56:10,575 - INFO -       Verification CRC: 0x4F81
+2025-06-30 03:56:10,575 - INFO -       Verification Pass: ❌
+2025-06-30 03:56:10,575 - INFO -
+   🔧 Algorithm: ANSI
+2025-06-30 03:56:10,576 - INFO -       Message Data: 5081010000
+2025-06-30 03:56:10,576 - INFO -       Received CRC: 0x9A9F
+2025-06-30 03:56:10,576 - INFO -       Calculated CRC: 0xF0B9
+2025-06-30 03:56:10,576 - INFO -       CRC Match: ❌
+2025-06-30 03:56:10,576 - INFO -       Verification CRC: 0x4F9A
+2025-06-30 03:56:10,576 - INFO -       Verification Pass: ❌
+2025-06-30 03:56:10,576 - INFO -
+============================================================
+2025-06-30 03:56:10,576 - INFO - 🏁 CRC VERIFICATION COMPLETE
+2025-06-30 03:56:10,576 - INFO - ============================================================
+2025-06-30 03:56:10,576 - INFO - Look for algorithms that show:
+2025-06-30 03:56:10,576 - INFO - - CRC Match: ✅ (our calculated CRC matches frame CRC)
+2025-06-30 03:56:10,576 - INFO - - Verification Pass: ✅ (CRC from ADR to CRC-H equals 0000h)
+2025-06-30 03:56:10,577 - INFO - The algorithm with both ✅ is the correct one!
+PS C:\UNG__\UNG-5>
