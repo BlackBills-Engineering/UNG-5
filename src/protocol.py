@@ -20,7 +20,7 @@ class MKR5Protocol:
     MAX_PUMPS = 32
     
     # Communication settings
-    BAUD_RATE = 9600  # Can be 19200 for shorter distances
+    BAUD_RATE = 19200  # Can be 19200 for shorter distances
     DATA_BITS = 8
     STOP_BITS = 1
     PARITY = serial.PARITY_ODD
@@ -259,18 +259,35 @@ class MKR5Protocol:
             logger.error("No prices provided for update")
             return None
             
-        timeout = timeout or self.TIMEOUT
+        timeout = timeout or 0.5  # Use longer timeout for price updates (500ms)
         
         try:
+            # Clear input buffer first
+            self.serial_conn.reset_input_buffer()
+            
+            # Small delay to ensure pump is ready for price update
+            time.sleep(0.05)  # 50ms delay before sending
+            
             message = self.create_price_update_message(address, prices)
             self.log_frame_details(message, "TX", address, "command PRICE_UPDATE")
             
-            self.serial_conn.write(message)
-            logger.info(f"   ✅ Sent {len(message)} bytes successfully")
+            # Send message
+            bytes_written = self.serial_conn.write(message)
+            logger.info(f"   ✅ Sent {bytes_written} bytes successfully")
             
-            # Wait for response
-            time.sleep(timeout)
-            response_data = self.serial_conn.read(100)
+            # Wait for response using proper polling like send_command
+            start_time = time.time()
+            response_data = b''
+            
+            while time.time() - start_time < timeout:
+                if self.serial_conn.in_waiting > 0:
+                    response_data += self.serial_conn.read(self.serial_conn.in_waiting)
+                    
+                    # Check if we have a complete message
+                    if len(response_data) >= 2 and response_data[-2:] == bytes([self.ETX, self.SF]):
+                        break
+                        
+                time.sleep(0.001)  # Small delay to avoid busy waiting
             
             if response_data:
                 self.log_frame_details(response_data, "RX", address, "response")
