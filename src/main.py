@@ -13,9 +13,33 @@ from .models import ScanPumpsResponse, ApiResponse, PumpInfo
 from .protocol import MKR5Protocol
 
 # Configure logging
+# log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+# logging.basicConfig(level=getattr(logging, log_level))
 log_level = os.getenv("LOG_LEVEL", "INFO").upper()
-logging.basicConfig(level=getattr(logging, log_level))
+log_to_file = os.getenv("LOG_TO_FILE", "false").lower() == "true"
+log_file_path = os.getenv("LOG_FILE_PATH", "pump_logs.log")
 logger = logging.getLogger(__name__)
+
+logging.basicConfig(level=getattr(logging, log_level))
+
+if log_to_file:
+    from logging.handlers import RotatingFileHandler
+    
+    max_size = int(os.getenv("LOG_FILE_MAX_SIZE", "10485760"))  # 10MB default
+    backup_count = int(os.getenv("LOG_FILE_BACKUP_COUNT", "5"))
+    
+    file_handler = RotatingFileHandler(
+        log_file_path,
+        maxBytes=max_size,
+        backupCount=backup_count
+    )
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(
+        logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    )
+    
+    logging.getLogger().addHandler(file_handler)
+    logger.info(f"File logging enabled: {log_file_path}")
 
 # Global protocol instance
 protocol_instance: Optional[MKR5Protocol] = None
