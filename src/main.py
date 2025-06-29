@@ -87,6 +87,13 @@ async def root():
                 <li><a href="/health">Health Check</a></li>
             </ul>
             
+            <h2>Pump Control Endpoints:</h2>
+            <ul>
+                <li><strong>GET</strong> /pumps/scan - Scan all pumps</li>
+                <li><strong>GET</strong> /pumps/{address}/status - Get pump status</li>
+                <li><strong>POST</strong> /pumps/{address}/switch-off - Switch off pump</li>
+            </ul>
+            
             <h2>Protocol Information:</h2>
             <p><strong>Protocol:</strong> MKR5 DART Pump Interface</p>
             <p><strong>Address Range:</strong> 0x50 - 0x6F (80-111 decimal)</p>
@@ -232,6 +239,112 @@ async def get_pump_status(
         )
 
 
+@app.post("/pumps/{pump_address}/switch-off", response_model=ApiResponse)
+async def switch_off_pump(
+    pump_address: str,
+    protocol: MKR5Protocol = Depends(get_protocol)
+):
+    """
+    Switch off a specific pump
+    
+    This command switches off the pump. The light and pump motor are turned off.
+    Used when the station is closing or if there is an error in the pump.
+    
+    Args:
+        pump_address: Pump address in hex format (e.g., '50', '0x50') or decimal
+    
+    Returns:
+        ApiResponse: Command execution result
+    """
+    try:
+        # Parse address (support both hex and decimal)
+        if pump_address.startswith('0x') or pump_address.startswith('0X'):
+            address = int(pump_address, 16)
+        elif pump_address.lower().endswith('h'):
+            address = int(pump_address[:-1], 16)
+        else:
+            # Try decimal first, then hex
+            try:
+                address = int(pump_address, 10)  # Try decimal first
+            except ValueError:
+                try:
+                    address = int(pump_address, 16)  # Then try hex
+                except ValueError:
+                    raise ValueError(f"Invalid address format: {pump_address}")
+        
+        # Validate address range
+        if not (protocol.MIN_PUMP_ADDRESS <= address <= protocol.MAX_PUMP_ADDRESS):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid pump address. Must be between 0x{protocol.MIN_PUMP_ADDRESS:02X} and 0x{protocol.MAX_PUMP_ADDRESS:02X}"
+            )
+        
+        # Check if serial connection is available
+        if not protocol.serial_conn or not protocol.serial_conn.is_open:
+            raise HTTPException(
+                status_code=503,
+                detail="Serial connection not available. Check COM port configuration."
+            )
+        
+        from .protocol import PumpCommand
+        
+        # Send SWITCH_OFF command
+        logger.info(f"Sending SWITCH_OFF command to pump 0x{address:02X}")
+        response = protocol.send_command(address, PumpCommand.SWITCH_OFF, timeout=1.0)
+        
+        if response is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Pump at address 0x{address:02X} is not responding"
+            )
+        
+        # Get updated status to confirm command was executed
+        status_response = protocol.send_command(address, PumpCommand.RETURN_STATUS, timeout=1.0)
+        
+        result_data = {
+            "command": "SWITCH_OFF",
+            "pump_address": f"0x{address:02X}",
+            "command_response": response,
+        }
+        
+        if status_response:
+            result_data["new_status"] = status_response.get('status', 'unknown')
+            result_data["status_name"] = get_status_name(status_response.get('status', 0))
+        
+        return ApiResponse(
+            success=True,
+            message=f"SWITCH_OFF command sent to pump 0x{address:02X}",
+            data=result_data
+        )
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid address format: {pump_address}. Error: {str(e)}"
+        )
+    except Exception as e:
+        error_msg = str(e) if str(e) else "Unknown error occurred"
+        logger.error(f"Error switching off pump: {error_msg}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to switch off pump: {error_msg}"
+        )
+
+
+def get_status_name(status_code: int) -> str:
+    """Convert status code to human-readable name"""
+    status_map = {
+        0: "PUMP_NOT_PROGRAMMED",
+        1: "RESET",
+        2: "AUTHORIZED", 
+        4: "FILLING",
+        5: "FILLING_COMPLETED",
+        6: "MAX_AMOUNT_VOLUME_REACHED",
+        7: "SWITCHED_OFF"
+    }
+    return status_map.get(status_code, f"UNKNOWN({status_code})")
+
+
 # Additional endpoints can be added here for other pump operations:
 # - authorize_pump()
 # - reset_pump()
@@ -248,5 +361,5 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=8000,
         reload=True,
-        log_level="info"
+        log_level="debug"
     )

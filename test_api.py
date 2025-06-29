@@ -86,6 +86,37 @@ class PumpAPITester:
             
         return response.json() if response.status_code == 200 else {"error": response.status_code}
     
+    def test_switch_off_pump(self, address: str) -> Dict[str, Any]:
+        """Test switching off a specific pump"""
+        print(f"\n🔍 Testing SWITCH_OFF command for pump {address}...")
+        response = self.session.post(f"{self.base_url}/pumps/{address}/switch-off")
+        
+        if response.status_code == 200:
+            result = response.json()
+            if result["success"]:
+                data = result["data"]
+                print(f"✅ SWITCH_OFF command sent successfully")
+                print(f"   Pump Address: {data.get('pump_address', 'N/A')}")
+                print(f"   Command: {data.get('command', 'N/A')}")
+                if "new_status" in data:
+                    print(f"   New Status: {data.get('status_name', 'N/A')} ({data.get('new_status', 'N/A')})")
+                print(f"   Message: {result['message']}")
+            else:
+                print("❌ SWITCH_OFF command failed")
+        elif response.status_code == 404:
+            print(f"❌ Pump at address {address} not found or not responding")
+        elif response.status_code == 503:
+            print(f"❌ Serial connection not available")
+        else:
+            print(f"❌ Error: HTTP {response.status_code}")
+            try:
+                error_detail = response.json().get("detail", "Unknown error")
+                print(f"   Details: {error_detail}")
+            except:
+                pass
+            
+        return response.json() if response.status_code == 200 else {"error": response.status_code}
+    
     def get_status_name(self, status_code: int) -> str:
         """Convert status code to human-readable name"""
         status_map = {
@@ -120,6 +151,15 @@ class PumpAPITester:
             if len(scan_result["pumps"]) > 1:
                 second_pump = scan_result["pumps"][1]
                 self.test_pump_status(str(second_pump["address"]))
+            
+            # Test SWITCH_OFF command on first pump
+            print(f"\n🔍 Testing SWITCH_OFF command...")
+            first_pump_addr = f"0x{first_pump['address']:02X}"
+            self.test_switch_off_pump(first_pump_addr)
+            
+            # Check status after switch off
+            time.sleep(0.5)  # Small delay
+            self.test_pump_status(first_pump_addr)
         
         # Test non-existent pump
         print(f"\n🔍 Testing non-existent pump...")

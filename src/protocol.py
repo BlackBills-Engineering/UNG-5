@@ -232,8 +232,13 @@ class MKR5Protocol:
             
             # Create and send command
             message = self.create_command_message(address, command)
-            logger.debug(f"Sending command to pump {address:02X}: {message.hex()}")
-            self.serial_conn.write(message)
+            
+            # Log detailed frame information
+            self.log_frame_details(message, "TX", address, f"command {command.name}")
+            
+            # Send the message
+            bytes_written = self.serial_conn.write(message)
+            logger.info(f"   ✅ Sent {bytes_written} bytes successfully")
             
             # Wait for response
             start_time = time.time()
@@ -250,10 +255,18 @@ class MKR5Protocol:
                 time.sleep(0.001)  # Small delay to avoid busy waiting
             
             if response_data:
-                logger.debug(f"Received response from pump {address:02X}: {response_data.hex()}")
-                return self.parse_pump_response(response_data)
+                self.log_frame_details(response_data, "RX", address, "response")
+                
+                parsed_response = self.parse_pump_response(response_data)
+                if parsed_response:
+                    logger.info(f"   ✅ Response parsed successfully")
+                    logger.debug(f"   Parsed data: {parsed_response}")
+                else:
+                    logger.warning(f"   ⚠️ Failed to parse response")
+                
+                return parsed_response
             else:
-                logger.debug(f"No response from pump {address:02X}")
+                logger.warning(f"📭 No response from pump 0x{address:02X} after {timeout:.1f}s timeout")
                 
         except Exception as e:
             logger.error(f"Error communicating with pump {address:02X}: {e}")
@@ -307,3 +320,45 @@ class MKR5Protocol:
         
         logger.info(f"Scan complete. Found {len(found_pumps)} pumps")
         return found_pumps
+    
+    def log_frame_details(self, frame: bytes, direction: str, address: int, description: str = ""):
+        """
+        Log detailed frame information in a readable format
+        
+        Args:
+            frame: Raw frame bytes
+            direction: "TX" for sent, "RX" for received
+            address: Pump address
+            description: Additional description
+        """
+        arrow = "📤" if direction == "TX" else "📥"
+        action = "Sending to" if direction == "TX" else "Received from"
+        
+        logger.info(f"{arrow} {action} pump 0x{address:02X}{f' ({description})' if description else ''}:")
+        logger.info(f"   Raw frame: {frame.hex()}")
+        logger.info(f"   Formatted: {' '.join(f'{b:02x}' for b in frame)}")
+        logger.info(f"   Length: {len(frame)} bytes")
+        
+        # Parse frame structure
+        if len(frame) >= 4:
+            logger.debug(f"   Frame structure:")
+            logger.debug(f"     ADR: 0x{frame[0]:02X} ({'pump address'})")
+            logger.debug(f"     CTRL: 0x{frame[1]:02X} ({'master' if frame[1] & 0x80 else 'slave'}, TX#={(frame[1] & 0x0F)})")
+            logger.debug(f"     TRANS: 0x{frame[2]:02X} ({'transaction type'})")
+            
+            if len(frame) > 3:
+                data_len = frame[3]
+                logger.debug(f"     LNG: 0x{data_len:02X} ({data_len} bytes of data)")
+                
+                # Show data bytes
+                if len(frame) > 4 and data_len > 0:
+                    data_end = min(4 + data_len, len(frame))
+                    data_bytes = frame[4:data_end]
+                    logger.debug(f"     DATA: {' '.join(f'0x{b:02X}' for b in data_bytes)}")
+                
+                # Show CRC and terminators
+                if len(frame) >= 4 + data_len + 4:
+                    crc_start = 4 + data_len
+                    logger.debug(f"     CRC: 0x{frame[crc_start]:02X}{frame[crc_start+1]:02X}")
+                    logger.debug(f"     ETX: 0x{frame[crc_start+2]:02X}")
+                    logger.debug(f"     SF: 0x{frame[crc_start+3]:02X}")
