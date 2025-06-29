@@ -1,34 +1,47 @@
-INFO:     127.0.0.1:64864 - "GET /pumps/80/status HTTP/1.1" 200 OK
-INFO:src.main:Sending DUMMY PRICE_UPDATE command to pump 0x50 with 8 nozzles at 1000.0 soums each
+PS C:\UNG__\UNG-5> python .\run_server.py
+INFO:     Will watch for changes in these directories: ['C:\\UNG__\\UNG-5']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [19536] using WatchFiles
+INFO:     Started server process [21608]
+INFO:     Waiting for application startup.
+INFO:src.main:Starting MKR5 Pump Control API
+INFO:src.main:Configured COM port: COM3
+INFO:src.main:Configured baud rate: 9600
+INFO:src.protocol:Connected to COM3 at 9600 baud
+INFO:src.main:Successfully connected to COM3
+INFO:     Application startup complete.
+INFO:     127.0.0.1:51086 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51086 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:src.main:Sending DUMMY PRICE_UPDATE command to pump 0x50 with 8 nozzles at 15.5 soums each
 INFO:src.protocol:📤 Sending to pump 0x50 (command PRICE_UPDATE):
-INFO:src.protocol:   Raw frame: 5081051810000010000010000010000010000010000010000010000024be03fa
-INFO:src.protocol:   Formatted: 50 81 05 18 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 24 be 03 fa
+INFO:src.protocol:   Raw frame: 50810518015500015500015500015500015500015500015500015500617003fa
+INFO:src.protocol:   Formatted: 50 81 05 18 01 55 00 01 55 00 01 55 00 01 55 00 01 55 00 01 55 00 01 55 00 01 55 00 61 70 03 fa
 INFO:src.protocol:   Length: 32 bytes
 DEBUG:src.protocol:   Frame structure:
 DEBUG:src.protocol:     ADR: 0x50 (pump address)
 DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
 DEBUG:src.protocol:     TRANS: 0x05 (transaction type)
 DEBUG:src.protocol:     LNG: 0x18 (24 bytes of data)
-DEBUG:src.protocol:     DATA: 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00   
-DEBUG:src.protocol:     CRC: 0x24BE
+DEBUG:src.protocol:     DATA: 0x01 0x55 0x00 0x01 0x55 0x00 0x01 0x55 0x00 0x01 0x55 0x00 0x01 0x55 0x00 0x01 0x55 0x00 0x01 0x55 0x00 0x01 0x55 0x00   
+DEBUG:src.protocol:     CRC: 0x6170
 DEBUG:src.protocol:     ETX: 0x03
 DEBUG:src.protocol:     SF: 0xFA
 INFO:src.protocol:   ✅ Sent 32 bytes successfully
 INFO:src.protocol:📥 Received from pump 0x50 (response):
-INFO:src.protocol:   Raw frame: 5081051810000010000010000010000010000010000010000010000024be03fa
-INFO:src.protocol:   Formatted: 50 81 05 18 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 24 be 03 fa
+INFO:src.protocol:   Raw frame: 50810518015500015500015500015500015500015500015500015500617003fa
+INFO:src.protocol:   Formatted: 50 81 05 18 01 55 00 01 55 00 01 55 00 01 55 00 01 55 00 01 55 00 01 55 00 01 55 00 61 70 03 fa
 INFO:src.protocol:   Length: 32 bytes
 DEBUG:src.protocol:   Frame structure:
 DEBUG:src.protocol:     ADR: 0x50 (pump address)
 DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
 DEBUG:src.protocol:     TRANS: 0x05 (transaction type)
 DEBUG:src.protocol:     LNG: 0x18 (24 bytes of data)
-DEBUG:src.protocol:     DATA: 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00   
-DEBUG:src.protocol:     CRC: 0x24BE
+DEBUG:src.protocol:     DATA: 0x01 0x55 0x00 0x01 0x55 0x00 0x01 0x55 0x00 0x01 0x55 0x00 0x01 0x55 0x00 0x01 0x55 0x00 0x01 0x55 0x00 0x01 0x55 0x00   
+DEBUG:src.protocol:     CRC: 0x6170
 DEBUG:src.protocol:     ETX: 0x03
 DEBUG:src.protocol:     SF: 0xFA
 INFO:src.protocol:   ✅ Response parsed successfully
-DEBUG:src.protocol:   Parsed data: {'address': 80, 'transaction': 5, 'data_length': 24, 'raw_data': b'\x10\x00\x00\x10\x00\x00\x10\x00\x00\x10\x00\x00\x10\x00\x00\x10\x00\x00\x10\x00\x00\x10\x00\x00'}
+DEBUG:src.protocol:   Parsed data: {'address': 80, 'transaction': 5, 'data_length': 24, 'raw_data': b'\x01U\x00\x01U\x00\x01U\x00\x01U\x00\x01U\x00\x01U\x00\x01U\x00\x01U\x00'}
 INFO:src.protocol:📤 Sending to pump 0x50 (command RETURN_STATUS):
 INFO:src.protocol:   Raw frame: 5081010100bfba03fa
 INFO:src.protocol:   Formatted: 50 81 01 01 00 bf ba 03 fa
@@ -58,65 +71,4 @@ DEBUG:src.protocol:     ETX: 0x03
 DEBUG:src.protocol:     SF: 0xFA
 INFO:src.protocol:   ✅ Response parsed successfully
 DEBUG:src.protocol:   Parsed data: {'address': 80, 'transaction': 1, 'data_length': 1, 'raw_data': b'\x00', 'status': 0}
-INFO:     127.0.0.1:65149 - "POST /pumps/80/dummy-price-update?nozzle_count=8 HTTP/1.1" 200 OK
-INFO:src.main:Sending DUMMY PRICE_UPDATE command to pump 0x50 with 8 nozzles at 1000.0 soums each
-INFO:src.protocol:📤 Sending to pump 0x50 (command PRICE_UPDATE):
-INFO:src.protocol:   Raw frame: 5081051810000010000010000010000010000010000010000010000024be03fa
-INFO:src.protocol:   Formatted: 50 81 05 18 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 24 be 03 fa
-INFO:src.protocol:   Length: 32 bytes
-DEBUG:src.protocol:   Frame structure:
-
-DEBUG:src.protocol:     ADR: 0x50 (pump address)
-DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
-DEBUG:src.protocol:     TRANS: 0x05 (transaction type)
-DEBUG:src.protocol:     LNG: 0x18 (24 bytes of data)
-DEBUG:src.protocol:     DATA: 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00   
-DEBUG:src.protocol:     CRC: 0x24BE
-DEBUG:src.protocol:     ETX: 0x03
-DEBUG:src.protocol:     SF: 0xFA
-INFO:src.protocol:   ✅ Sent 32 bytes successfully
-INFO:src.protocol:📥 Received from pump 0x50 (response):
-INFO:src.protocol:   Raw frame: 5081051810000010000010000010000010000010000010000010000024be03fa
-INFO:src.protocol:   Formatted: 50 81 05 18 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 10 00 00 24 be 03 fa
-INFO:src.protocol:   Length: 32 bytes
-DEBUG:src.protocol:   Frame structure:
-DEBUG:src.protocol:     ADR: 0x50 (pump address)
-DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
-DEBUG:src.protocol:     TRANS: 0x05 (transaction type)
-DEBUG:src.protocol:     LNG: 0x18 (24 bytes of data)
-DEBUG:src.protocol:     DATA: 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00 0x10 0x00 0x00   
-DEBUG:src.protocol:     CRC: 0x24BE
-DEBUG:src.protocol:     ETX: 0x03
-DEBUG:src.protocol:     SF: 0xFA
-INFO:src.protocol:   ✅ Response parsed successfully
-DEBUG:src.protocol:   Parsed data: {'address': 80, 'transaction': 5, 'data_length': 24, 'raw_data': b'\x10\x00\x00\x10\x00\x00\x10\x00\x00\x10\x00\x00\x10\x00\x00\x10\x00\x00\x10\x00\x00\x10\x00\x00'}
-INFO:src.protocol:📤 Sending to pump 0x50 (command RETURN_STATUS):
-INFO:src.protocol:   Raw frame: 5081010100bfba03fa
-INFO:src.protocol:   Formatted: 50 81 01 01 00 bf ba 03 fa
-INFO:src.protocol:   Length: 9 bytes
-DEBUG:src.protocol:   Frame structure:
-DEBUG:src.protocol:     ADR: 0x50 (pump address)
-DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
-DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
-DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
-DEBUG:src.protocol:     DATA: 0x00
-DEBUG:src.protocol:     CRC: 0xBFBA
-DEBUG:src.protocol:     ETX: 0x03
-DEBUG:src.protocol:     SF: 0xFA
-INFO:src.protocol:   ✅ Sent 9 bytes successfully
-INFO:src.protocol:📥 Received from pump 0x50 (response):
-INFO:src.protocol:   Raw frame: 5081010100bfba03fa
-INFO:src.protocol:   Formatted: 50 81 01 01 00 bf ba 03 fa
-INFO:src.protocol:   Length: 9 bytes
-DEBUG:src.protocol:   Frame structure:
-DEBUG:src.protocol:     ADR: 0x50 (pump address)
-DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
-DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
-DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
-DEBUG:src.protocol:     DATA: 0x00
-DEBUG:src.protocol:     CRC: 0xBFBA
-DEBUG:src.protocol:     ETX: 0x03
-DEBUG:src.protocol:     SF: 0xFA
-INFO:src.protocol:   ✅ Response parsed successfully
-DEBUG:src.protocol:   Parsed data: {'address': 80, 'transaction': 1, 'data_length': 1, 'raw_data': b'\x00', 'status': 0}
-INFO:     127.0.0.1:65182 - "POST /pumps/80/dummy-price-update?nozzle_count=8 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51087 - "POST /pumps/80/dummy-price-update?nozzle_count=8 HTTP/1.1" 200 OK
