@@ -216,7 +216,7 @@ class MKR5Protocol:
     
     def decimal_to_bcd(self, value: float, total_bytes: int = 3) -> bytes:
         """Convert decimal price to packed BCD format"""
-        int_value = int(value * 100)  # Assume 2 decimal places
+        int_value = int(value * 1000)  # Prices stored in thousandths
         bcd_bytes = []
         for _ in range(total_bytes):
             byte_val = (int_value % 100)

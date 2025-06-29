@@ -618,7 +618,7 @@ async def dummy_price_update(
             )
         
         # Create price tuples for nozzles 1 through nozzle_count
-        dummy_price = 1000.00  # 1000 soums
+        dummy_price = 15.50  # 1000 soums
         price_tuples = []
         for nozzle_num in range(1, nozzle_count + 1):
             price_tuples.append((nozzle_num, dummy_price))
