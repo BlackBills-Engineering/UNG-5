@@ -1,0 +1,309 @@
+import struct
+import time
+from typing import List, Optional, Tuple
+import serial
+import logging
+from .models import PumpInfo, PumpStatus, NozzleInfo, PumpCommand
+
+logger = logging.getLogger(__name__)
+
+
+class MKR5Protocol:
+    """
+    MKR5 Protocol implementation for communication with fuel pumps
+    Based on MKR5 Protocol Specification - DART PUMP INTERFACE
+    """
+    
+    # Protocol constants
+    MIN_PUMP_ADDRESS = 0x50  # 50H
+    MAX_PUMP_ADDRESS = 0x6F  # 6FH
+    MAX_PUMPS = 32
+    
+    # Communication settings
+    BAUD_RATE = 9600  # Can be 19200 for shorter distances
+    DATA_BITS = 8
+    STOP_BITS = 1
+    PARITY = serial.PARITY_ODD
+    TIMEOUT = 0.1  # 100ms timeout
+    
+    # Message structure constants
+    ETX = 0x03  # End of text
+    SF = 0xFA   # Stop flag
+    
+    # Transaction codes
+    CD1_COMMAND = 0x01  # Command to pump
+    DC1_PUMP_STATUS = 0x01  # Pump status response
+    DC3_NOZZLE_STATUS = 0x03  # Nozzle status and filling price
+    DC9_PUMP_IDENTITY = 0x09  # Pump identity
+    
+    def __init__(self, port: str, baud_rate: int = 9600):
+        """
+        Initialize MKR5 Protocol handler
+        
+        Args:
+            port: Serial port (e.g., '/dev/ttyUSB0', 'COM1', 'COM3')
+            baud_rate: Communication baud rate (9600 or 19200)
+        """
+        self.port = port
+        self.baud_rate = baud_rate
+        self.serial_conn = None
+        
+    def connect(self) -> bool:
+        """
+        Establish serial connection to pump network
+        
+        Returns:
+            bool: True if connection successful, False otherwise
+        """
+        try:
+            self.serial_conn = serial.Serial(
+                port=self.port,
+                baudrate=self.baud_rate,
+                bytesize=self.DATA_BITS,
+                stopbits=self.STOP_BITS,
+                parity=self.PARITY,
+                timeout=self.TIMEOUT
+            )
+            logger.info(f"Connected to {self.port} at {self.baud_rate} baud")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to connect to {self.port}: {e}")
+            return False
+    
+    def disconnect(self):
+        """Close serial connection"""
+        if self.serial_conn and self.serial_conn.is_open:
+            self.serial_conn.close()
+            logger.info("Serial connection closed")
+    
+    def calculate_crc16(self, data: bytes) -> int:
+        """
+        Calculate CRC-16 CCITT checksum
+        
+        Args:
+            data: Bytes to calculate CRC for
+            
+        Returns:
+            int: CRC-16 value
+        """
+        crc = 0x0000
+        for byte in data:
+            crc ^= (byte << 8)
+            for _ in range(8):
+                if crc & 0x8000:
+                    crc = (crc << 1) ^ 0x1021
+                else:
+                    crc <<= 1
+                crc &= 0xFFFF
+        return crc
+    
+    def create_command_message(self, address: int, command: PumpCommand) -> bytes:
+        """
+        Create a command message according to MKR5 protocol
+        
+        Args:
+            address: Pump address (0x50-0x6F)
+            command: Command to send
+            
+        Returns:
+            bytes: Complete message packet
+        """
+        # Control byte (master, TX#=1)
+        ctrl = 0x81  # 10000001 - Master bit set, TX#=1
+        
+        # Transaction CD1 (Command to pump)
+        trans = self.CD1_COMMAND
+        lng = 0x01  # Length of data
+        dcc = command.value  # Command code
+        
+        # Build message without CRC
+        message_data = bytes([address, ctrl, trans, lng, dcc])
+        
+        # Calculate CRC
+        crc = self.calculate_crc16(message_data)
+        crc_l = crc & 0xFF
+        crc_h = (crc >> 8) & 0xFF
+        
+        # Complete message
+        message = message_data + bytes([crc_l, crc_h, self.ETX, self.SF])
+        
+        return message
+    
+    def parse_pump_response(self, data: bytes) -> Optional[dict]:
+        """
+        Parse pump response message
+        
+        Args:
+            data: Raw response data
+            
+        Returns:
+            dict: Parsed response data or None if invalid
+        """
+        if len(data) < 8:  # Minimum message length
+            return None
+            
+        try:
+            # Basic message structure: ADR CTRL TRANS LNG DATA... CRC-L CRC-H ETX SF
+            address = data[0]
+            ctrl = data[1]
+            trans = data[2]
+            lng = data[3]
+            
+            # Verify message integrity
+            if data[-2] != self.ETX or data[-1] != self.SF:
+                return None
+                
+            # Extract data portion
+            data_start = 4
+            data_end = 4 + lng
+            message_data = data[:data_end]
+            
+            # Verify CRC
+            expected_crc = self.calculate_crc16(message_data)
+            received_crc = (data[data_end + 1] << 8) | data[data_end]
+            
+            if expected_crc != received_crc:
+                logger.warning(f"CRC mismatch for pump {address:02X}")
+                return None
+            
+            response = {
+                'address': address,
+                'transaction': trans,
+                'data_length': lng,
+                'raw_data': data[data_start:data_end]
+            }
+            
+            # Parse specific transaction types
+            if trans == self.DC1_PUMP_STATUS and lng >= 1:
+                response['status'] = data[data_start]
+            elif trans == self.DC3_NOZZLE_STATUS and lng >= 4:
+                # PRI (3 bytes) + NOZIO (1 byte)
+                price_bcd = data[data_start:data_start+3]
+                nozio = data[data_start+3]
+                response['filling_price'] = self.bcd_to_decimal(price_bcd) / 1000.0
+                response['nozzle_number'] = nozio & 0x0F
+                response['nozzle_out'] = bool(nozio & 0x10)
+            elif trans == self.DC9_PUMP_IDENTITY and lng >= 5:
+                identity_bcd = data[data_start:data_start+5]
+                response['identity'] = self.bcd_to_string(identity_bcd)
+                
+            return response
+            
+        except Exception as e:
+            logger.error(f"Error parsing response: {e}")
+            return None
+    
+    def bcd_to_decimal(self, bcd_data: bytes) -> int:
+        """Convert packed BCD to decimal"""
+        result = 0
+        for byte in bcd_data:
+            result = result * 100 + ((byte >> 4) * 10) + (byte & 0x0F)
+        return result
+    
+    def bcd_to_string(self, bcd_data: bytes) -> str:
+        """Convert packed BCD to string"""
+        result = ""
+        for byte in bcd_data:
+            result += f"{(byte >> 4):01d}{(byte & 0x0F):01d}"
+        return result
+    
+    def send_command(self, address: int, command: PumpCommand, timeout: float = None) -> Optional[dict]:
+        """
+        Send command to pump and wait for response
+        
+        Args:
+            address: Pump address
+            command: Command to send
+            timeout: Response timeout in seconds (uses default if None)
+            
+        Returns:
+            dict: Response data or None if no response/error
+        """
+        if timeout is None:
+            timeout = self.TIMEOUT
+            
+        if not self.serial_conn or not self.serial_conn.is_open:
+            logger.error("Serial connection not established")
+            return None
+            
+        try:
+            # Clear input buffer
+            self.serial_conn.reset_input_buffer()
+            
+            # Create and send command
+            message = self.create_command_message(address, command)
+            logger.debug(f"Sending command to pump {address:02X}: {message.hex()}")
+            self.serial_conn.write(message)
+            
+            # Wait for response
+            start_time = time.time()
+            response_data = b''
+            
+            while time.time() - start_time < timeout:
+                if self.serial_conn.in_waiting > 0:
+                    response_data += self.serial_conn.read(self.serial_conn.in_waiting)
+                    
+                    # Check if we have a complete message
+                    if len(response_data) >= 2 and response_data[-2:] == bytes([self.ETX, self.SF]):
+                        break
+                        
+                time.sleep(0.001)  # Small delay to avoid busy waiting
+            
+            if response_data:
+                logger.debug(f"Received response from pump {address:02X}: {response_data.hex()}")
+                return self.parse_pump_response(response_data)
+            else:
+                logger.debug(f"No response from pump {address:02X}")
+                
+        except Exception as e:
+            logger.error(f"Error communicating with pump {address:02X}: {e}")
+            
+        return None
+    
+    def scan_pumps(self) -> List[PumpInfo]:
+        """
+        Scan all possible pump addresses and return available pumps
+        
+        Returns:
+            List[PumpInfo]: List of found pumps with their information
+        """
+        found_pumps = []
+        
+        logger.info(f"Scanning pump addresses {self.MIN_PUMP_ADDRESS:02X}-{self.MAX_PUMP_ADDRESS:02X}")
+        
+        for address in range(self.MIN_PUMP_ADDRESS, self.MAX_PUMP_ADDRESS + 1):
+            try:
+                # Send RETURN_STATUS command
+                response = self.send_command(address, PumpCommand.RETURN_STATUS)
+                
+                if response:
+                    # Pump responded, get additional info
+                    pump_info = PumpInfo(
+                        address=address,
+                        status=PumpStatus(response.get('status', 0)),
+                        is_online=True
+                    )
+                    
+                    # Try to get pump identity
+                    identity_response = self.send_command(address, PumpCommand.RETURN_PUMP_IDENTITY)
+                    if identity_response and 'identity' in identity_response:
+                        pump_info.identity = identity_response['identity']
+                    
+                    # Add nozzle information if available
+                    if 'nozzle_number' in response:
+                        nozzle = NozzleInfo(
+                            nozzle_number=response['nozzle_number'],
+                            is_out=response.get('nozzle_out', False),
+                            filling_price=response.get('filling_price')
+                        )
+                        pump_info.nozzles = [nozzle]
+                    
+                    found_pumps.append(pump_info)
+                    logger.info(f"Found pump at address {address:02X}, status: {pump_info.status.name}")
+                
+            except Exception as e:
+                logger.error(f"Error scanning pump {address:02X}: {e}")
+                continue
+        
+        logger.info(f"Scan complete. Found {len(found_pumps)} pumps")
+        return found_pumps
