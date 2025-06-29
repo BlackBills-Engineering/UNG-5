@@ -424,6 +424,143 @@ def get_status_name(status_code: int) -> str:
     return status_map.get(status_code, f"UNKNOWN({status_code})")
 
 
+@app.post("/pumps/{pump_address}/price-update", response_model=ApiResponse)
+async def update_pump_prices(
+    pump_address: str,
+    price_update: dict,
+    protocol: MKR5Protocol = Depends(get_protocol)
+):
+    """
+    Update prices for a specific pump
+    
+    This command updates the filling prices for all nozzles on the pump.
+    A pump in PUMP_NOT_PROGRAMMED state requires a price update to become operational.
+    
+    Args:
+        pump_address: Pump address in hex format (e.g., '50', '0x50') or decimal
+        price_update: Dictionary with "prices" list containing {"nozzle_number": int, "price": float}
+    
+    Returns:
+        ApiResponse: Command execution result
+    """
+    try:
+        # Parse address
+        if pump_address.startswith('0x') or pump_address.startswith('0X'):
+            address = int(pump_address, 16)
+        elif pump_address.lower().endswith('h'):
+            address = int(pump_address[:-1], 16)
+        else:
+            try:
+                address = int(pump_address, 10)
+            except ValueError:
+                try:
+                    address = int(pump_address, 16)
+                except ValueError:
+                    raise ValueError(f"Invalid address format: {pump_address}")
+        
+        # Validate address range
+        if not (protocol.MIN_PUMP_ADDRESS <= address <= protocol.MAX_PUMP_ADDRESS):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid pump address. Must be between 0x{protocol.MIN_PUMP_ADDRESS:02X} and 0x{protocol.MAX_PUMP_ADDRESS:02X}"
+            )
+        
+        # Check if serial connection is available
+        if not protocol.serial_conn or not protocol.serial_conn.is_open:
+            raise HTTPException(
+                status_code=503,
+                detail="Serial connection not available. Check COM port configuration."
+            )
+        
+        # Validate price update data
+        if 'prices' not in price_update:
+            raise HTTPException(
+                status_code=400,
+                detail="Missing 'prices' field in request body"
+            )
+        
+        prices_list = price_update['prices']
+        if not isinstance(prices_list, list) or len(prices_list) == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="'prices' must be a non-empty list"
+            )
+        
+        # Convert to format expected by protocol
+        price_tuples = []
+        for price_info in prices_list:
+            if not isinstance(price_info, dict):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Each price entry must be an object with 'nozzle_number' and 'price' fields"
+                )
+            
+            if 'nozzle_number' not in price_info or 'price' not in price_info:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Each price entry must have 'nozzle_number' and 'price' fields"
+                )
+            
+            nozzle_num = int(price_info['nozzle_number'])
+            price = float(price_info['price'])
+            
+            if nozzle_num < 1 or nozzle_num > 8:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Nozzle number must be between 1 and 8, got {nozzle_num}"
+                )
+            
+            if price < 0 or price > 999.99:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Price must be between 0 and 999.99, got {price}"
+                )
+            
+            price_tuples.append((nozzle_num, price))
+        
+        # Import PumpCommand
+        from .protocol import PumpCommand
+        
+        # Send price update command
+        logger.info(f"Sending PRICE_UPDATE command to pump 0x{address:02X} with {len(price_tuples)} prices")
+        response = protocol.send_price_update(address, price_tuples, timeout=1.0)
+        
+        if response is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Pump at address 0x{address:02X} is not responding to price update"
+            )
+        
+        # Get updated status to confirm command was executed
+        status_response = protocol.send_command(address, PumpCommand.RETURN_STATUS, timeout=1.0)
+        
+        result_data = {
+            "command": "PRICE_UPDATE",
+            "pump_address": f"0x{address:02X}",
+            "prices_updated": price_tuples,
+            "command_response": response,
+        }
+        
+        if status_response:
+            result_data["new_status"] = status_response.get('status', 'unknown')
+            result_data["status_name"] = get_status_name(status_response.get('status', 0))
+        
+        return ApiResponse(
+            success=True,
+            message=f"PRICE_UPDATE command sent to pump 0x{address:02X} with {len(price_tuples)} prices",
+            data=result_data
+        )
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid input: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error updating prices for pump {pump_address}: {str(e)}")
+        return ApiResponse(
+            success=False,
+            message=f"Error updating prices: {str(e)}"
+        )
+
+
 # Additional endpoints can be added here for other pump operations:
 # - authorize_pump()
 # - reset_pump()

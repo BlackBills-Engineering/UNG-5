@@ -1,0 +1,593 @@
+PS C:\UNG__\UNG-5> python .\run_server.py
+INFO:     Will watch for changes in these directories: ['C:\\UNG__\\UNG-5']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [21740] using WatchFiles
+INFO:     Started server process [22216]
+INFO:     Waiting for application startup.
+INFO:src.main:Starting MKR5 Pump Control API
+INFO:src.main:Configured COM port: COM3
+INFO:src.main:Configured baud rate: 9600
+INFO:src.protocol:Connected to COM3 at 9600 baud
+INFO:src.main:Successfully connected to COM3
+INFO:     Application startup complete.
+INFO:     127.0.0.1:60460 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60460 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:src.main:Sending SWITCH_OFF command to pump 0x50
+INFO:src.protocol:📤 Sending to pump 0x50 (command SWITCH_OFF):
+INFO:src.protocol:   Raw frame: 508101010af51b03fa
+INFO:src.protocol:   Formatted: 50 81 01 01 0a f5 1b 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x50 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x0A
+DEBUG:src.protocol:     CRC: 0xF51B
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x50 (response):
+INFO:src.protocol:   Raw frame: 508101010af51b03fa
+INFO:src.protocol:   Formatted: 50 81 01 01 0a f5 1b 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x50 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x0A
+DEBUG:src.protocol:     CRC: 0xF51B
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 80, 'transaction': 1, 'data_length': 1, 'raw_data': b'\n', 'status': 10}
+INFO:src.protocol:📤 Sending to pump 0x50 (command RETURN_STATUS):
+INFO:src.protocol:   Raw frame: 5081010100bfba03fa
+INFO:src.protocol:   Formatted: 50 81 01 01 00 bf ba 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x50 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x00
+DEBUG:src.protocol:     CRC: 0xBFBA
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x50 (response):
+INFO:src.protocol:   Raw frame: 5081010100bfba03fa
+INFO:src.protocol:   Formatted: 50 81 01 01 00 bf ba 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x50 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x00
+DEBUG:src.protocol:     CRC: 0xBFBA
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 80, 'transaction': 1, 'data_length': 1, 'raw_data': b'\x00', 'status': 0}
+INFO:     127.0.0.1:60461 - "POST /pumps/80/switch-off HTTP/1.1" 200 OK
+INFO:src.main:Sending SWITCH_OFF command to pump 0x51
+INFO:src.protocol:📤 Sending to pump 0x51 (command SWITCH_OFF):
+INFO:src.protocol:   Raw frame: 518101010aa4b103fa
+INFO:src.protocol:   Formatted: 51 81 01 01 0a a4 b1 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x51 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x0A
+DEBUG:src.protocol:     CRC: 0xA4B1
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x51 (response):
+INFO:src.protocol:   Raw frame: 518101010aa4b103fa
+INFO:src.protocol:   Formatted: 51 81 01 01 0a a4 b1 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x51 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x0A
+DEBUG:src.protocol:     CRC: 0xA4B1
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 81, 'transaction': 1, 'data_length': 1, 'raw_data': b'\n', 'status': 10}
+INFO:src.protocol:📤 Sending to pump 0x51 (command RETURN_STATUS):
+INFO:src.protocol:   Raw frame: 5181010100ee1003fa
+INFO:src.protocol:   Formatted: 51 81 01 01 00 ee 10 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x51 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x00
+DEBUG:src.protocol:     CRC: 0xEE10
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x51 (response):
+INFO:src.protocol:   Raw frame: 5181010100ee1003fa
+INFO:src.protocol:   Formatted: 51 81 01 01 00 ee 10 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x51 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x00
+DEBUG:src.protocol:     CRC: 0xEE10
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 81, 'transaction': 1, 'data_length': 1, 'raw_data': b'\x00', 'status': 0}
+INFO:     127.0.0.1:60462 - "POST /pumps/81/switch-off HTTP/1.1" 200 OK
+INFO:src.main:Sending SWITCH_OFF command to pump 0x52
+INFO:src.protocol:📤 Sending to pump 0x52 (command SWITCH_OFF):
+INFO:src.protocol:   Raw frame: 528101010a765f03fa
+INFO:src.protocol:   Formatted: 52 81 01 01 0a 76 5f 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x52 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x0A
+DEBUG:src.protocol:     CRC: 0x765F
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x52 (response):
+INFO:src.protocol:   Raw frame: 528101010a765f03fa
+INFO:src.protocol:   Formatted: 52 81 01 01 0a 76 5f 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x52 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x0A
+DEBUG:src.protocol:     CRC: 0x765F
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 82, 'transaction': 1, 'data_length': 1, 'raw_data': b'\n', 'status': 10}
+INFO:src.protocol:📤 Sending to pump 0x52 (command RETURN_STATUS):
+INFO:src.protocol:   Raw frame: 52810101003cfe03fa
+INFO:src.protocol:   Formatted: 52 81 01 01 00 3c fe 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x52 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x00
+DEBUG:src.protocol:     CRC: 0x3CFE
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x52 (response):
+INFO:src.protocol:   Raw frame: 52810101003cfe03fa
+INFO:src.protocol:   Formatted: 52 81 01 01 00 3c fe 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x52 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x00
+DEBUG:src.protocol:     CRC: 0x3CFE
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 82, 'transaction': 1, 'data_length': 1, 'raw_data': b'\x00', 'status': 0}
+INFO:     127.0.0.1:60462 - "POST /pumps/82/switch-off HTTP/1.1" 200 OK
+INFO:src.main:Sending SWITCH_OFF command to pump 0x53
+INFO:src.protocol:📤 Sending to pump 0x53 (command SWITCH_OFF):
+INFO:src.protocol:   Raw frame: 538101010a27f503fa
+INFO:src.protocol:   Formatted: 53 81 01 01 0a 27 f5 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x53 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x0A
+DEBUG:src.protocol:     CRC: 0x27F5
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x53 (response):
+INFO:src.protocol:   Raw frame: 538101010a27f503fa
+INFO:src.protocol:   Formatted: 53 81 01 01 0a 27 f5 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x53 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x0A
+DEBUG:src.protocol:     CRC: 0x27F5
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 83, 'transaction': 1, 'data_length': 1, 'raw_data': b'\n', 'status': 10}
+INFO:src.protocol:📤 Sending to pump 0x53 (command RETURN_STATUS):
+INFO:src.protocol:   Raw frame: 53810101006d5403fa
+INFO:src.protocol:   Formatted: 53 81 01 01 00 6d 54 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x53 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x00
+DEBUG:src.protocol:     CRC: 0x6D54
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x53 (response):
+INFO:src.protocol:   Raw frame: 53810101006d5403fa
+INFO:src.protocol:   Formatted: 53 81 01 01 00 6d 54 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x53 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x00
+DEBUG:src.protocol:     CRC: 0x6D54
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 83, 'transaction': 1, 'data_length': 1, 'raw_data': b'\x00', 'status': 0}
+INFO:     127.0.0.1:60462 - "POST /pumps/83/switch-off HTTP/1.1" 200 OK
+INFO:src.main:Sending SWITCH_OFF command to pump 0x54
+INFO:src.protocol:📤 Sending to pump 0x54 (command SWITCH_OFF):
+INFO:src.protocol:   Raw frame: 548101010af39203fa
+INFO:src.protocol:   Formatted: 54 81 01 01 0a f3 92 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x54 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x0A
+DEBUG:src.protocol:     CRC: 0xF392
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x54 (response):
+INFO:src.protocol:   Raw frame: 548101010af39203fa
+INFO:src.protocol:   Formatted: 54 81 01 01 0a f3 92 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x54 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x0A
+DEBUG:src.protocol:     CRC: 0xF392
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 84, 'transaction': 1, 'data_length': 1, 'raw_data': b'\n', 'status': 10}
+INFO:src.protocol:📤 Sending to pump 0x54 (command RETURN_STATUS):
+INFO:src.protocol:   Raw frame: 5481010100b93303fa
+INFO:src.protocol:   Formatted: 54 81 01 01 00 b9 33 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x54 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x00
+DEBUG:src.protocol:     CRC: 0xB933
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x54 (response):
+INFO:src.protocol:   Raw frame: 5481010100b93303fa
+INFO:src.protocol:   Formatted: 54 81 01 01 00 b9 33 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x54 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x00
+DEBUG:src.protocol:     CRC: 0xB933
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 84, 'transaction': 1, 'data_length': 1, 'raw_data': b'\x00', 'status': 0}
+INFO:     127.0.0.1:60462 - "POST /pumps/84/switch-off HTTP/1.1" 200 OK
+INFO:src.main:Sending SWITCH_OFF command to pump 0x55
+INFO:src.protocol:📤 Sending to pump 0x55 (command SWITCH_OFF):
+INFO:src.protocol:   Raw frame: 558101010aa23803fa
+INFO:src.protocol:   Formatted: 55 81 01 01 0a a2 38 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x55 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x0A
+DEBUG:src.protocol:     CRC: 0xA238
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x55 (response):
+INFO:src.protocol:   Raw frame: 558101010aa23803fa
+INFO:src.protocol:   Formatted: 55 81 01 01 0a a2 38 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x55 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x0A
+DEBUG:src.protocol:     CRC: 0xA238
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 85, 'transaction': 1, 'data_length': 1, 'raw_data': b'\n', 'status': 10}
+INFO:src.protocol:📤 Sending to pump 0x55 (command RETURN_STATUS):
+INFO:src.protocol:   Raw frame: 5581010100e89903fa
+INFO:src.protocol:   Formatted: 55 81 01 01 00 e8 99 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x55 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x00
+DEBUG:src.protocol:     CRC: 0xE899
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x55 (response):
+INFO:src.protocol:   Raw frame: 5581010100e89903fa
+INFO:src.protocol:   Formatted: 55 81 01 01 00 e8 99 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x55 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x00
+DEBUG:src.protocol:     CRC: 0xE899
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 85, 'transaction': 1, 'data_length': 1, 'raw_data': b'\x00', 'status': 0}
+INFO:     127.0.0.1:60462 - "POST /pumps/85/switch-off HTTP/1.1" 200 OK
+INFO:src.protocol:📤 Sending to pump 0x50 (command RETURN_STATUS):
+INFO:src.protocol:   Raw frame: 5081010100bfba03fa
+INFO:src.protocol:   Formatted: 50 81 01 01 00 bf ba 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x50 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x00
+DEBUG:src.protocol:     CRC: 0xBFBA
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x50 (response):
+INFO:src.protocol:   Raw frame: 5081010100bfba03fa
+INFO:src.protocol:   Formatted: 50 81 01 01 00 bf ba 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x50 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x00
+DEBUG:src.protocol:     CRC: 0xBFBA
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 80, 'transaction': 1, 'data_length': 1, 'raw_data': b'\x00', 'status': 0}
+INFO:     127.0.0.1:60464 - "GET /pumps/80/status HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:src.protocol:Serial connection closed
+INFO:src.main:Serial connection closed
+INFO:     Application shutdown complete.
+INFO:     Finished server process [22216]
+INFO:     Stopping reloader process [21740]
+PS C:\UNG__\UNG-5> git pull
+Updating b7919c6..d5232ab
+Fast-forward
+ .vscode/settings.json |  5 +++
+ README.md             | 38 +++++++++++++++++++++
+ src/main.py           | 79 +++++++++++++++++++++++++++++++++++++++++++
+ src/models.py         |  9 +++++
+ src/protocol.py       | 69 ++++++++++++++++++++++++++++++++++++++
+ test_filling_info.py  | 93 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 6 files changed, 293 insertions(+)
+ create mode 100644 .vscode/settings.json
+ create mode 100644 test_filling_info.py
+PS C:\UNG__\UNG-5> python .\run_server.py
+INFO:     Will watch for changes in these directories: ['C:\\UNG__\\UNG-5']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [19708] using WatchFiles
+INFO:     Started server process [18232]
+INFO:     Waiting for application startup.
+INFO:src.main:Starting MKR5 Pump Control API
+INFO:src.main:Configured COM port: COM3
+INFO:src.main:Configured baud rate: 9600
+INFO:src.protocol:Connected to COM3 at 9600 baud
+INFO:src.main:Successfully connected to COM3
+INFO:     Application startup complete.
+INFO:     127.0.0.1:60657 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60657 - "GET /openapi.json HTTP/1.1" 200 OK
+INFO:src.main:Getting filling information from pump 0x50
+INFO:src.protocol:Getting filling information from pump 0x50
+INFO:src.protocol:📤 Sending to pump 0x50 (command RETURN_FILLING_INFORMATION):
+INFO:src.protocol:   Raw frame: 50810101043bfa03fa
+INFO:src.protocol:   Formatted: 50 81 01 01 04 3b fa 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x50 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x04
+DEBUG:src.protocol:     CRC: 0x3BFA
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x50 (response):
+INFO:src.protocol:   Raw frame: 50810101043bfa03fa
+INFO:src.protocol:   Formatted: 50 81 01 01 04 3b fa 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x50 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x04
+DEBUG:src.protocol:     CRC: 0x3BFA
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 80, 'transaction': 1, 'data_length': 1, 'raw_data': b'\x04', 'status': 4}
+WARNING:src.protocol:Invalid or no filling information response from pump 0x50
+ERROR:src.main:Error getting filling information: 404: Pump at address 0x50 is not responding or has no filling information
+INFO:     127.0.0.1:60658 - "GET /pumps/80/filling-info HTTP/1.1" 500 Internal Server Error
+INFO:src.main:Getting filling information from pump 0x51
+INFO:src.protocol:Getting filling information from pump 0x51
+INFO:src.protocol:📤 Sending to pump 0x51 (command RETURN_FILLING_INFORMATION):
+INFO:src.protocol:   Raw frame: 51810101046a5003fa
+INFO:src.protocol:   Formatted: 51 81 01 01 04 6a 50 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x51 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x04
+DEBUG:src.protocol:     CRC: 0x6A50
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x51 (response):
+INFO:src.protocol:   Raw frame: 51810101046a5003fa
+INFO:src.protocol:   Formatted: 51 81 01 01 04 6a 50 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x51 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x04
+DEBUG:src.protocol:     CRC: 0x6A50
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 81, 'transaction': 1, 'data_length': 1, 'raw_data': b'\x04', 'status': 4}
+WARNING:src.protocol:Invalid or no filling information response from pump 0x51
+ERROR:src.main:Error getting filling information: 404: Pump at address 0x51 is not responding or has no filling information
+INFO:     127.0.0.1:60660 - "GET /pumps/81/filling-info HTTP/1.1" 500 Internal Server Error
+INFO:src.main:Getting filling information from pump 0x52
+INFO:src.protocol:Getting filling information from pump 0x52
+INFO:src.protocol:📤 Sending to pump 0x52 (command RETURN_FILLING_INFORMATION):
+INFO:src.protocol:   Raw frame: 5281010104b8be03fa
+INFO:src.protocol:   Formatted: 52 81 01 01 04 b8 be 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x52 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x04
+DEBUG:src.protocol:     CRC: 0xB8BE
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x52 (response):
+INFO:src.protocol:   Raw frame: 5281010104b8be03fa
+INFO:src.protocol:   Formatted: 52 81 01 01 04 b8 be 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x52 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x04
+DEBUG:src.protocol:     CRC: 0xB8BE
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 82, 'transaction': 1, 'data_length': 1, 'raw_data': b'\x04', 'status': 4}
+WARNING:src.protocol:Invalid or no filling information response from pump 0x52
+ERROR:src.main:Error getting filling information: 404: Pump at address 0x52 is not responding or has no filling information
+INFO:     127.0.0.1:60660 - "GET /pumps/82/filling-info HTTP/1.1" 500 Internal Server Error
+INFO:src.main:Getting filling information from pump 0x52
+INFO:src.protocol:Getting filling information from pump 0x52
+INFO:src.protocol:📤 Sending to pump 0x52 (command RETURN_FILLING_INFORMATION):
+INFO:src.protocol:   Raw frame: 5281010104b8be03fa
+INFO:src.protocol:   Formatted: 52 81 01 01 04 b8 be 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x52 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x04
+DEBUG:src.protocol:     CRC: 0xB8BE
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+WARNING:src.protocol:📭 No response from pump 0x52 after 0.1s timeout
+WARNING:src.protocol:Invalid or no filling information response from pump 0x52
+ERROR:src.main:Error getting filling information: 404: Pump at address 0x52 is not responding or has no filling information
+INFO:     127.0.0.1:60667 - "GET /pumps/82/filling-info HTTP/1.1" 500 Internal Server Error
+INFO:src.main:Getting filling information from pump 0x53
+INFO:src.protocol:Getting filling information from pump 0x53
+INFO:src.protocol:📤 Sending to pump 0x53 (command RETURN_FILLING_INFORMATION):
+INFO:src.protocol:   Raw frame: 5381010104e91403fa
+INFO:src.protocol:   Formatted: 53 81 01 01 04 e9 14 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x53 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x04
+DEBUG:src.protocol:     CRC: 0xE914
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Sent 9 bytes successfully
+INFO:src.protocol:📥 Received from pump 0x53 (response):
+INFO:src.protocol:   Raw frame: 5381010104e91403fa
+INFO:src.protocol:   Formatted: 53 81 01 01 04 e9 14 03 fa
+INFO:src.protocol:   Length: 9 bytes
+DEBUG:src.protocol:   Frame structure:
+DEBUG:src.protocol:     ADR: 0x53 (pump address)
+DEBUG:src.protocol:     CTRL: 0x81 (master, TX#=1)
+DEBUG:src.protocol:     TRANS: 0x01 (transaction type)
+DEBUG:src.protocol:     LNG: 0x01 (1 bytes of data)
+DEBUG:src.protocol:     DATA: 0x04
+DEBUG:src.protocol:     CRC: 0xE914
+DEBUG:src.protocol:     ETX: 0x03
+DEBUG:src.protocol:     SF: 0xFA
+INFO:src.protocol:   ✅ Response parsed successfully
+DEBUG:src.protocol:   Parsed data: {'address': 83, 'transaction': 1, 'data_length': 1, 'raw_data': b'\x04', 'status': 4}
+WARNING:src.protocol:Invalid or no filling information response from pump 0x53
+ERROR:src.main:Error getting filling information: 404: Pump at address 0x53 is not responding or has no filling information
+INFO:     127.0.0.1:60673 - "GET /pumps/83/filling-info HTTP/1.1" 500 Internal Server Error

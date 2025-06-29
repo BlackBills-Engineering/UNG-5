@@ -214,6 +214,83 @@ class MKR5Protocol:
             result += f"{(byte >> 4):01d}{(byte & 0x0F):01d}"
         return result
     
+    def decimal_to_bcd(self, value: float, total_bytes: int = 3) -> bytes:
+        """Convert decimal price to packed BCD format"""
+        int_value = int(value * 100)  # Assume 2 decimal places
+        bcd_bytes = []
+        for _ in range(total_bytes):
+            byte_val = (int_value % 100)
+            bcd_byte = ((byte_val // 10) << 4) | (byte_val % 10)
+            bcd_bytes.insert(0, bcd_byte)
+            int_value //= 100
+        return bytes(bcd_bytes)
+
+    def create_price_update_message(self, address: int, prices: List[Tuple[int, float]]) -> bytes:
+        """Create a price update message (CD5 transaction)"""
+        ctrl = 0x81  # Master bit set, TX#=1
+        trans = 0x05  # CD5 transaction
+        lng = 3 * len(prices)  # 3 bytes per price
+        
+        # Build price data - 3 bytes per price in packed BCD
+        price_data = b''
+        for nozzle_num, price in sorted(prices):
+            price_bcd = self.decimal_to_bcd(price, 3)
+            price_data += price_bcd
+        
+        # Build message without CRC
+        message_data = bytes([address, ctrl, trans, lng]) + price_data
+        
+        # Calculate CRC
+        crc = self.calculate_crc16(message_data)
+        crc_l = crc & 0xFF
+        crc_h = (crc >> 8) & 0xFF
+        
+        # Complete message
+        message = message_data + bytes([crc_l, crc_h, self.ETX, self.SF])
+        return message
+
+    def send_price_update(self, address: int, prices: List[Tuple[int, float]], timeout: float = None) -> Optional[dict]:
+        """Send price update command to pump"""
+        if not self.serial_conn or not self.serial_conn.is_open:
+            logger.error("Serial connection not established")
+            return None
+            
+        if not prices:
+            logger.error("No prices provided for update")
+            return None
+            
+        timeout = timeout or self.TIMEOUT
+        
+        try:
+            message = self.create_price_update_message(address, prices)
+            self.log_frame_details(message, "TX", address, "command PRICE_UPDATE")
+            
+            self.serial_conn.write(message)
+            logger.info(f"   ✅ Sent {len(message)} bytes successfully")
+            
+            # Wait for response
+            time.sleep(timeout)
+            response_data = self.serial_conn.read(100)
+            
+            if response_data:
+                self.log_frame_details(response_data, "RX", address, "response")
+                parsed_response = self.parse_pump_response(response_data)
+                
+                if parsed_response:
+                    logger.info("   ✅ Response parsed successfully")
+                    logger.debug(f"   Parsed data: {parsed_response}")
+                    return parsed_response
+                else:
+                    logger.warning("   ❌ Failed to parse response")
+                    return None
+            else:
+                logger.warning(f"📭 No response from pump 0x{address:02X} after {timeout}s timeout")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error sending price update to pump 0x{address:02X}: {e}")
+            return None
+    
     def send_command(self, address: int, command: PumpCommand, timeout: float = None) -> Optional[dict]:
         """
         Send command to pump and wait for response

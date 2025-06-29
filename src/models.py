@@ -24,6 +24,7 @@ class PumpCommand(Enum):
     AUTHORIZE = 0x06
     STOP = 0x08
     SWITCH_OFF = 0x0A
+    PRICE_UPDATE = 0x05  # CD5 - transaction type, not data command
 
 
 class NozzleInfo(BaseModel):
@@ -52,6 +53,17 @@ class FillingInfo(BaseModel):
     nozzle_number: Optional[int] = None
     is_nozzle_out: Optional[bool] = None
     filling_price: Optional[float] = None
+
+
+class PriceInfo(BaseModel):
+    """Price information for a nozzle"""
+    nozzle_number: int
+    price: float  # Price per unit (e.g., per liter)
+
+
+class PriceUpdateRequest(BaseModel):
+    """Request model for price update operation"""
+    prices: List[PriceInfo]  # List of prices for each nozzle
 
 
 class ScanPumpsResponse(BaseModel):
