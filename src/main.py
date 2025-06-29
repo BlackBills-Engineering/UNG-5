@@ -561,6 +561,113 @@ async def update_pump_prices(
         )
 
 
+@app.post("/pumps/{pump_address}/dummy-price-update", response_model=ApiResponse)
+async def dummy_price_update(
+    pump_address: str,
+    nozzle_count: int,
+    protocol: MKR5Protocol = Depends(get_protocol)
+):
+    """
+    Send dummy price update to a pump (for testing)
+    
+    This is a simplified price update that sets the same price (1000.00) 
+    for the specified number of nozzles (1, 2, 3, etc.).
+    Useful for testing pumps in PUMP_NOT_PROGRAMMED state.
+    
+    Args:
+        pump_address: Pump address in hex format (e.g., '50', '0x50') or decimal
+        nozzle_count: Number of nozzles to update (1-8)
+    
+    Returns:
+        ApiResponse: Command execution result
+    """
+    try:
+        # Parse address
+        if pump_address.startswith('0x') or pump_address.startswith('0X'):
+            address = int(pump_address, 16)
+        elif pump_address.lower().endswith('h'):
+            address = int(pump_address[:-1], 16)
+        else:
+            try:
+                address = int(pump_address, 10)
+            except ValueError:
+                try:
+                    address = int(pump_address, 16)
+                except ValueError:
+                    raise ValueError(f"Invalid address format: {pump_address}")
+        
+        # Validate address range
+        if not (protocol.MIN_PUMP_ADDRESS <= address <= protocol.MAX_PUMP_ADDRESS):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid pump address. Must be between 0x{protocol.MIN_PUMP_ADDRESS:02X} and 0x{protocol.MAX_PUMP_ADDRESS:02X}"
+            )
+        
+        # Validate nozzle count
+        if not isinstance(nozzle_count, int) or nozzle_count < 1 or nozzle_count > 8:
+            raise HTTPException(
+                status_code=400,
+                detail="nozzle_count must be an integer between 1 and 8"
+            )
+        
+        # Check if serial connection is available
+        if not protocol.serial_conn or not protocol.serial_conn.is_open:
+            raise HTTPException(
+                status_code=503,
+                detail="Serial connection not available. Check COM port configuration."
+            )
+        
+        # Create price tuples for nozzles 1 through nozzle_count
+        dummy_price = 1000.00  # 1000 soums
+        price_tuples = []
+        for nozzle_num in range(1, nozzle_count + 1):
+            price_tuples.append((nozzle_num, dummy_price))
+        
+        # Import PumpCommand
+        from .protocol import PumpCommand
+        
+        # Send price update command
+        logger.info(f"Sending DUMMY PRICE_UPDATE command to pump 0x{address:02X} with {nozzle_count} nozzles at {dummy_price} soums each")
+        response = protocol.send_price_update(address, price_tuples, timeout=1.0)
+        
+        if response is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Pump at address 0x{address:02X} is not responding to price update"
+            )
+        
+        # Get updated status to confirm command was executed
+        status_response = protocol.send_command(address, PumpCommand.RETURN_STATUS, timeout=1.0)
+        
+        result_data = {
+            "command": "DUMMY_PRICE_UPDATE",
+            "pump_address": f"0x{address:02X}",
+            "nozzle_count": nozzle_count,
+            "price_per_nozzle": dummy_price,
+            "prices_sent": price_tuples,
+            "command_response": response,
+        }
+        
+        if status_response:
+            result_data["new_status"] = status_response.get('status', 'unknown')
+            result_data["status_name"] = get_status_name(status_response.get('status', 0))
+        
+        return ApiResponse(
+            success=True,
+            message=f"DUMMY_PRICE_UPDATE sent to pump 0x{address:02X} for {nozzle_count} nozzle(s) at {dummy_price} soums each",
+            data=result_data
+        )
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid input: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error sending dummy price update to pump {pump_address}: {str(e)}")
+        return ApiResponse(
+            success=False,
+            message=f"Error sending dummy price update: {str(e)}"
+        )
+
+
 # Additional endpoints can be added here for other pump operations:
 # - authorize_pump()
 # - reset_pump()
