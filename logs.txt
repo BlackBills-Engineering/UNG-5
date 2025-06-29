@@ -72,3 +72,160 @@ DEBUG:src.protocol:     SF: 0xFA
 INFO:src.protocol:   ✅ Response parsed successfully
 DEBUG:src.protocol:   Parsed data: {'address': 80, 'transaction': 1, 'data_length': 1, 'raw_data': b'\x00', 'status': 0}
 INFO:     127.0.0.1:51087 - "POST /pumps/80/dummy-price-update?nozzle_count=8 HTTP/1.1" 200 OK
+PS C:\UNG__\UNG-5> python .\test_echo_diagnostic.py
+🔧 MKR5 Pump Echo Diagnostic Tool
+==================================================
+Testing port: COM3
+Baud rate: 19200
+
+🔧 Opening serial port COM3 at 19200 baud...
+✅ Serial port opened successfully
+   Port: COM3
+   Baud rate: 19200
+   Timeout: 2.0s
+
+🧪 Test 1/5: Testing pattern of 5 bytes
+   Sending: 0102030405
+   Sent: 5 bytes
+   Available to read: 5 bytes
+   Received: 0102030405
+   ⚠️  EXACT ECHO DETECTED - Received exactly what was sent!
+
+🧪 Test 2/5: Testing pattern of 9 bytes
+   Sending: 5081010100BFBA03FA
+   Sent: 9 bytes
+   Available to read: 9 bytes
+   Received: 5081010100BFBA03FA
+   ⚠️  EXACT ECHO DETECTED - Received exactly what was sent!
+
+🧪 Test 3/5: Testing pattern of 8 bytes
+   Sending: AA55CC33FF001122
+   Sent: 8 bytes
+   Available to read: 8 bytes
+   Received: AA55CC33FF001122
+   ⚠️  EXACT ECHO DETECTED - Received exactly what was sent!
+
+🧪 Test 4/5: Testing pattern of 16 bytes
+   Sending: 48454C4C4F5F574F524C445F54455354
+   Sent: 16 bytes
+   Available to read: 16 bytes
+   Received: 48454C4C4F5F574F524C445F54455354
+   ⚠️  EXACT ECHO DETECTED - Received exactly what was sent!
+
+🧪 Test 5/5: Testing pattern of 32 bytes
+   Sending: 50810518015500015500015500015500015500015500015500015500617003FA
+   Sent: 32 bytes
+   Available to read: 32 bytes
+   Received: 50810518015500015500015500015500015500015500015500015500617003FA
+   ⚠️  EXACT ECHO DETECTED - Received exactly what was sent!
+
+============================================================
+🚨 ECHO/LOOPBACK DETECTED!
+
+Possible causes:
+1. Hardware echo/loopback:
+   - RS485 transceiver not properly configured
+   - TX and RX lines connected together
+   - Echo jumper or DIP switch enabled
+   - Wiring issue (A+/B- lines crossed or shorted)
+
+2. Pump behavior:
+   - Pump is not processing commands properly
+   - Pump is in a mode where it just echoes data
+   - Communication protocol mismatch
+
+Next steps:
+- Check RS485 hardware configuration
+- Verify pump is powered and operational
+- Try different baud rates or communication settings
+- Consult pump documentation for initialization sequence
+🔒 Serial port COM3 closed
+
+🔍 Testing with actual MKR5 command patterns...
+
+📡 MKR5 Test 1: Sending actual pump command
+   Command: 5081010100BFBA03FA
+   Response: 5081010100BFBA03FA
+   ⚠️  EXACT ECHO - Pump echoed the command back!
+
+📡 MKR5 Test 2: Sending actual pump command
+   Command: 50810518015500015500015500015500015500015500015500015500617003FA
+   Response: 50810518015500015500015500015500015500015500015500015500617003FA
+   ⚠️  EXACT ECHO - Pump echoed the command back!
+
+📡 MKR5 Test 3: Sending actual pump command
+   Command: 50810100009F9A03FA
+   Response: 50810100009F9A03FA
+   ⚠️  EXACT ECHO - Pump echoed the command back!
+
+============================================================
+⚠️  Diagnostic complete - Echo/loopback issues detected
+PS C:\UNG__\UNG-5> python .\test_serial_echo.py    
+2025-06-30 03:29:47,789 - INFO - Serial Port Echo Test
+2025-06-30 03:29:47,790 - INFO - This test will help determine if the pump is echoing data
+2025-06-30 03:29:47,790 - INFO - or if there's a hardware/wiring issue causing echoes.
+2025-06-30 03:29:47,790 - INFO -
+2025-06-30 03:29:47,790 - INFO - Testing serial echo on COM3 at 9600 baud
+2025-06-30 03:29:47,898 - INFO - ✅ Connected to COM3
+2025-06-30 03:29:47,999 - INFO - 
+==================================================
+2025-06-30 03:29:48,000 - INFO - TEST 1: Simple ASCII String
+2025-06-30 03:29:48,000 - INFO - ==================================================
+2025-06-30 03:29:48,000 - INFO - 📤 Sending: HELLO_TEST_123 (14 bytes)
+2025-06-30 03:29:48,001 - INFO - 📤 Hex: 48454C4C4F5F544553545F313233
+2025-06-30 03:29:48,502 - INFO - 📥 Received: 14 bytes
+2025-06-30 03:29:48,503 - INFO - 📥 ASCII: HELLO_TEST_123
+2025-06-30 03:29:48,504 - INFO - 📥 Hex: 48454C4C4F5F544553545F313233
+2025-06-30 03:29:48,504 - WARNING - ⚠️  EXACT ECHO DETECTED - Received exactly what was sent!
+2025-06-30 03:29:48,605 - INFO - 
+==================================================
+2025-06-30 03:29:48,606 - INFO - TEST 2: Binary Test Data
+2025-06-30 03:29:48,606 - INFO - ==================================================
+2025-06-30 03:29:48,607 - INFO - 📤 Sending: 10 bytes
+2025-06-30 03:29:48,607 - INFO - 📤 Hex: 0102030405AABBCCDDEE
+2025-06-30 03:29:49,108 - INFO - 📥 Received: 10 bytes
+2025-06-30 03:29:49,109 - INFO - 📥 Hex: 0102030405AABBCCDDEE
+2025-06-30 03:29:49,110 - WARNING - ⚠️  EXACT ECHO DETECTED - Received exactly what was sent!
+2025-06-30 03:29:49,211 - INFO - 
+==================================================
+2025-06-30 03:29:49,211 - INFO - TEST 3: Testing Different Delays
+2025-06-30 03:29:49,212 - INFO - ==================================================
+2025-06-30 03:29:49,212 - INFO - 📤 Sending with 0.1s delay: DELAY_0.1
+2025-06-30 03:29:49,314 - INFO - 📥 Received: DELAY_0.1
+2025-06-30 03:29:49,314 - WARNING - ⚠️  ECHO at 0.1s delay
+2025-06-30 03:29:49,415 - INFO - 📤 Sending with 0.2s delay: DELAY_0.2
+2025-06-30 03:29:49,617 - INFO - 📥 Received: DELAY_0.2
+2025-06-30 03:29:49,619 - WARNING - ⚠️  ECHO at 0.2s delay
+2025-06-30 03:29:49,720 - INFO - 📤 Sending with 0.5s delay: DELAY_0.5
+2025-06-30 03:29:50,222 - INFO - 📥 Received: DELAY_0.5
+2025-06-30 03:29:50,223 - WARNING - ⚠️  ECHO at 0.5s delay
+2025-06-30 03:29:50,324 - INFO - 📤 Sending with 1.0s delay: DELAY_1.0
+2025-06-30 03:29:51,326 - INFO - 📥 Received: DELAY_1.0
+2025-06-30 03:29:51,327 - WARNING - ⚠️  ECHO at 1.0s delay
+2025-06-30 03:29:51,428 - INFO - 
+==================================================
+2025-06-30 03:29:51,428 - INFO - TEST 4: MKR5-like Frame Test
+2025-06-30 03:29:51,429 - INFO - ==================================================
+2025-06-30 03:29:51,429 - INFO - 📤 Sending MKR5-like frame: 12 bytes
+2025-06-30 03:29:51,429 - INFO - 📤 Hex: 50819904AABBCCDD123403FA
+2025-06-30 03:29:51,932 - INFO - 📥 Received: 12 bytes
+2025-06-30 03:29:51,933 - INFO - 📥 Hex: 50819904AABBCCDD123403FA
+2025-06-30 03:29:51,933 - WARNING - ⚠️  EXACT ECHO of MKR5-like frame!
+2025-06-30 03:29:51,933 - INFO -
+============================================================
+2025-06-30 03:29:51,934 - INFO - ECHO TEST SUMMARY
+2025-06-30 03:29:51,934 - INFO - ============================================================
+2025-06-30 03:29:51,934 - INFO - If you see 'EXACT ECHO DETECTED' messages above, it means:
+2025-06-30 03:29:51,934 - INFO - 1. The serial connection is echoing data back
+2025-06-30 03:29:51,935 - INFO - 2. This could be due to:
+2025-06-30 03:29:51,935 - INFO -    - Hardware loopback (TX connected to RX)
+2025-06-30 03:29:51,936 - INFO -    - Pump echoing without processing
+2025-06-30 03:29:51,936 - INFO -    - Serial driver/adapter issue
+2025-06-30 03:29:51,936 - INFO -    - Incorrect wiring
+2025-06-30 03:29:51,936 - INFO -
+2025-06-30 03:29:51,936 - INFO - If no echoes were detected, the pump may be:
+2025-06-30 03:29:51,937 - INFO -    - Not responding at all
+2025-06-30 03:29:51,937 - INFO -    - Responding with different data
+2025-06-30 03:29:51,937 - INFO -    - Processing commands correctly
+2025-06-30 03:29:51,990 - INFO - ✅ Echo test completed successfully
+PS C:\UNG__\UNG-5> 

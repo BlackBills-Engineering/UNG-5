@@ -37,16 +37,18 @@ class MKR5Protocol:
     DC3_NOZZLE_STATUS = 0x03  # Nozzle status and filling price
     DC9_PUMP_IDENTITY = 0x09  # Pump identity
     
-    def __init__(self, port: str, baud_rate: int = 9600):
+    def __init__(self, port: str, baud_rate: int = 9600, parity: str = serial.PARITY_ODD):
         """
         Initialize MKR5 Protocol handler
         
         Args:
             port: Serial port (e.g., '/dev/ttyUSB0', 'COM1', 'COM3')
             baud_rate: Communication baud rate (9600 or 19200)
+            parity: Parity setting (serial.PARITY_NONE, serial.PARITY_EVEN, serial.PARITY_ODD)
         """
         self.port = port
         self.baud_rate = baud_rate
+        self.parity = parity
         self.serial_conn = None
         
     def connect(self) -> bool:
@@ -62,7 +64,7 @@ class MKR5Protocol:
                 baudrate=self.baud_rate,
                 bytesize=self.DATA_BITS,
                 stopbits=self.STOP_BITS,
-                parity=self.PARITY,
+                parity=self.parity,
                 timeout=self.TIMEOUT
             )
             logger.info(f"Connected to {self.port} at {self.baud_rate} baud")

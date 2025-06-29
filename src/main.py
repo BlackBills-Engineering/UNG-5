@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse
 from typing import Optional
 import logging
 import os
+import serial
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
@@ -25,6 +26,19 @@ COM_PORT = os.getenv("COM_PORT", "COM3")
 BAUD_RATE = int(os.getenv("BAUD_RATE", "9600"))
 RESPONSE_TIMEOUT = float(os.getenv("RESPONSE_TIMEOUT", "0.1"))
 
+# Parity configuration
+def get_parity_setting() -> str:
+    """Convert parity string to serial constant"""
+    parity_str = os.getenv("PARITY", "NONE").upper()
+    parity_map = {
+        "NONE": serial.PARITY_NONE,
+        "EVEN": serial.PARITY_EVEN, 
+        "ODD": serial.PARITY_ODD
+    }
+    return parity_map.get(parity_str, serial.PARITY_NONE)
+
+PARITY = get_parity_setting()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,9 +49,10 @@ async def lifespan(app: FastAPI):
     logger.info("Starting MKR5 Pump Control API")
     logger.info(f"Configured COM port: {COM_PORT}")
     logger.info(f"Configured baud rate: {BAUD_RATE}")
+    logger.info(f"Configured parity: {os.getenv('PARITY', 'NONE')}")
     
     # Initialize with real COM port
-    protocol_instance = MKR5Protocol(port=COM_PORT, baud_rate=BAUD_RATE)
+    protocol_instance = MKR5Protocol(port=COM_PORT, baud_rate=BAUD_RATE, parity=PARITY)
     
     if protocol_instance.connect():
         logger.info(f"Successfully connected to {COM_PORT}")
