@@ -5,10 +5,14 @@ Testing different byte orders to match MKR5 specification
 """
 
 import logging
-from crc import Calculator, Crc16
+import crc16
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+def calculate_crc16_ccitt(data: bytes) -> int:
+    """Calculate CRC-16 CCITT (same as our protocol implementation)"""
+    return crc16.crc16xmodem(data, 0x0000)
 
 def test_crc_byte_orders():
     """Test different CRC byte order interpretations"""
@@ -35,19 +39,18 @@ def test_crc_byte_orders():
     logger.info(f"   Little-endian interpretation: 0x{crc_little_endian:04X}")
     
     # Test CCITT with both interpretations
-    calc = Calculator(Crc16.CCITT, optimized=True)
-    calculated_crc = calc.checksum(message_data)
+    calculated_crc = calculate_crc16_ccitt(message_data)
     
     logger.info(f"   Calculated CCITT CRC: 0x{calculated_crc:04X}")
     
     # Test verification (should be 0x0000)
     # Big-endian: message + CRC high byte + CRC low byte
     verify_big = message_data + bytes([crc_bytes[0], crc_bytes[1]])
-    verify_crc_big = calc.checksum(verify_big)
+    verify_crc_big = calculate_crc16_ccitt(verify_big)
     
     # Little-endian: message + CRC low byte + CRC high byte  
     verify_little = message_data + bytes([crc_bytes[1], crc_bytes[0]])
-    verify_crc_little = calc.checksum(verify_little)
+    verify_crc_little = calculate_crc16_ccitt(verify_little)
     
     logger.info(f"   Verification (big-endian): 0x{verify_crc_big:04X}")
     logger.info(f"   Verification (little-endian): 0x{verify_crc_little:04X}")
@@ -66,13 +69,13 @@ def test_crc_byte_orders():
     
     # Test 1: Store as [high, low] (big-endian)
     test1_bytes = message_data + bytes([crc_high, crc_low])
-    test1_verify = calc.checksum(test1_bytes)
+    test1_verify = calculate_crc16_ccitt(test1_bytes)
     logger.info(f"   Test 1 [high,low]: {test1_bytes.hex().upper()}")
     logger.info(f"   Test 1 verification: 0x{test1_verify:04X}")
     
     # Test 2: Store as [low, high] (little-endian)
     test2_bytes = message_data + bytes([crc_low, crc_high])
-    test2_verify = calc.checksum(test2_bytes)
+    test2_verify = calculate_crc16_ccitt(test2_bytes)
     logger.info(f"   Test 2 [low,high]: {test2_bytes.hex().upper()}")
     logger.info(f"   Test 2 verification: 0x{test2_verify:04X}")
     
@@ -91,11 +94,9 @@ def test_working_frames():
     """Test frames that should work according to spec"""
     logger.info("\n🔧 Testing known working frames:")
     
-    calc = Calculator(Crc16.CCITT, optimized=True)
-    
     # Let's create a frame from scratch and see what CRC we get
     message = bytes([0x50, 0x81, 0x01, 0x01, 0x00])  # ADR, CTRL, TRANS, LNG, DATA
-    crc = calc.checksum(message)
+    crc = calculate_crc16_ccitt(message)
     
     logger.info(f"   Message: {message.hex().upper()}")
     logger.info(f"   Calculated CRC: 0x{crc:04X}")
@@ -106,13 +107,13 @@ def test_working_frames():
     
     # Big-endian storage [high, low]
     frame_big = message + bytes([crc_high, crc_low])
-    verify_big = calc.checksum(frame_big)
+    verify_big = calculate_crc16_ccitt(frame_big)
     logger.info(f"   Frame (big-endian): {frame_big.hex().upper()}")
     logger.info(f"   Verification (big-endian): 0x{verify_big:04X}")
     
     # Little-endian storage [low, high]  
     frame_little = message + bytes([crc_low, crc_high])
-    verify_little = calc.checksum(frame_little)
+    verify_little = calculate_crc16_ccitt(frame_little)
     logger.info(f"   Frame (little-endian): {frame_little.hex().upper()}")
     logger.info(f"   Verification (little-endian): 0x{verify_little:04X}")
     

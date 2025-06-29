@@ -4,3 +4,5 @@ pydantic
 pyserial
 python-multipart
 python-dotenv
+crc
+crc16
