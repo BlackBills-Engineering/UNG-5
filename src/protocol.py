@@ -33,6 +33,7 @@ class MKR5Protocol:
     # Transaction codes
     CD1_COMMAND = 0x01  # Command to pump
     DC1_PUMP_STATUS = 0x01  # Pump status response
+    DC2_FILLED_INFO = 0x02  # Filled volume and amount
     DC3_NOZZLE_STATUS = 0x03  # Nozzle status and filling price
     DC9_PUMP_IDENTITY = 0x09  # Pump identity
     
@@ -176,6 +177,12 @@ class MKR5Protocol:
             # Parse specific transaction types
             if trans == self.DC1_PUMP_STATUS and lng >= 1:
                 response['status'] = data[data_start]
+            elif trans == self.DC2_FILLED_INFO and lng >= 8:
+                # VOL (4 bytes) + AMO (4 bytes) - both in packed BCD
+                vol_bcd = data[data_start:data_start+4]
+                amo_bcd = data[data_start+4:data_start+8]
+                response['filled_volume'] = self.bcd_to_decimal(vol_bcd) / 1000.0  # Convert to liters
+                response['filled_amount'] = self.bcd_to_decimal(amo_bcd) / 100.0   # Convert to currency units
             elif trans == self.DC3_NOZZLE_STATUS and lng >= 4:
                 # PRI (3 bytes) + NOZIO (1 byte)
                 price_bcd = data[data_start:data_start+3]
@@ -362,3 +369,65 @@ class MKR5Protocol:
                     logger.debug(f"     CRC: 0x{frame[crc_start]:02X}{frame[crc_start+1]:02X}")
                     logger.debug(f"     ETX: 0x{frame[crc_start+2]:02X}")
                     logger.debug(f"     SF: 0x{frame[crc_start+3]:02X}")
+    
+    def get_filling_information(self, address: int) -> Optional[dict]:
+        """
+        Get filling information from pump (last successful filling)
+        
+        Args:
+            address: Pump address
+            
+        Returns:
+            dict: Filling information with volume and amount, or None if failed
+        """
+        if not self.serial_conn or not self.serial_conn.is_open:
+            logger.error("Serial connection not established")
+            return None
+            
+        try:
+            logger.info(f"Getting filling information from pump 0x{address:02X}")
+            
+            # Send RETURN_FILLING_INFORMATION command
+            response = self.send_command(address, PumpCommand.RETURN_FILLING_INFORMATION)
+            
+            if response and response.get('transaction') == self.DC2_FILLED_INFO:
+                filling_info = {
+                    'pump_address': address,
+                    'filled_volume': response.get('filled_volume', 0.0),
+                    'filled_amount': response.get('filled_amount', 0.0)
+                }
+                
+                # The command may also trigger nozzle status response (DC3)
+                # Try to get additional nozzle information
+                time.sleep(0.05)  # Small delay for potential second response
+                
+                if self.serial_conn.in_waiting > 0:
+                    additional_data = b''
+                    start_time = time.time()
+                    
+                    while time.time() - start_time < 0.1:  # 100ms timeout
+                        if self.serial_conn.in_waiting > 0:
+                            additional_data += self.serial_conn.read(self.serial_conn.in_waiting)
+                            
+                            if len(additional_data) >= 2 and additional_data[-2:] == bytes([self.ETX, self.SF]):
+                                break
+                                
+                        time.sleep(0.001)
+                    
+                    if additional_data:
+                        self.log_frame_details(additional_data, "RX", address, "additional nozzle info")
+                        additional_response = self.parse_pump_response(additional_data)
+                        
+                        if additional_response and additional_response.get('transaction') == self.DC3_NOZZLE_STATUS:
+                            filling_info['nozzle_number'] = additional_response.get('nozzle_number')
+                            filling_info['is_nozzle_out'] = additional_response.get('nozzle_out')
+                            filling_info['filling_price'] = additional_response.get('filling_price')
+                
+                return filling_info
+            else:
+                logger.warning(f"Invalid or no filling information response from pump 0x{address:02X}")
+                
+        except Exception as e:
+            logger.error(f"Error getting filling information from pump {address:02X}: {e}")
+            
+        return None

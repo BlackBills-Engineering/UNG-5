@@ -171,6 +171,44 @@ Examples:
 GET /health
 ```
 
+### Switch Off Command
+
+```bash
+POST /pumps/{pump_address}/switch-off
+```
+
+The SWITCH_OFF command turns off the pump according to MKR5 protocol:
+- **Purpose**: Used when station is closing or if there is an error in the pump
+- **Action**: Turns off the pump light and motor
+- **Result**: Pump transitions to `SWITCHED_OFF` status (code 7)
+
+Example:
+```bash
+curl -X POST http://localhost:8000/pumps/50/switch-off
+```
+
+Response:
+```json
+{
+  "success": true,
+  "message": "SWITCH_OFF command sent to pump 0x50",
+  "data": {
+    "command": "SWITCH_OFF",
+    "pump_address": "0x50",
+    "command_response": {"acknowledged": true},
+    "new_status": 7,
+    "status_name": "SWITCHED_OFF"
+  }
+}
+```
+
+**Important Notes:**
+- A pump in `SWITCHED_OFF` status can only be reactivated using:
+  - `RESET` command (transitions to `RESET` status)
+  - `STOP` command (transitions to `FILLING_COMPLETED` status)
+- The pump remains responsive to commands but motor and light are off
+- This is different from a communication failure - the pump is still connected
+
 ## Configuration
 
 ### Configuration Options

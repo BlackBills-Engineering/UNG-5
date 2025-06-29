@@ -45,6 +45,15 @@ class PumpInfo(BaseModel):
     error_message: Optional[str] = None
 
 
+class FillingInfo(BaseModel):
+    """Filling information model"""
+    filled_volume: float
+    filled_amount: float
+    nozzle_number: Optional[int] = None
+    is_nozzle_out: Optional[bool] = None
+    filling_price: Optional[float] = None
+
+
 class ScanPumpsResponse(BaseModel):
     """Response model for scan pumps operation"""
     success: bool

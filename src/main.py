@@ -331,6 +331,85 @@ async def switch_off_pump(
         )
 
 
+@app.get("/pumps/{pump_address}/filling-info", response_model=ApiResponse)
+async def get_pump_filling_info(
+    pump_address: str,
+    protocol: MKR5Protocol = Depends(get_protocol)
+):
+    """
+    Get last successful filling information from a specific pump
+    
+    Returns the filled volume and amount from the last completed filling operation.
+    This command sends RETURN_FILLING_INFORMATION to the pump which triggers
+    the pump to send transaction DC2 (filled volume and amount) and potentially
+    DC3 (nozzle status and filling price).
+    
+    Args:
+        pump_address: Pump address in hex format (e.g., '50', '0x50') or decimal
+    
+    Returns:
+        ApiResponse: Filling information including volume, amount, and nozzle details
+    """
+    try:
+        # Parse address (support both hex and decimal)
+        if pump_address.startswith('0x') or pump_address.startswith('0X'):
+            address = int(pump_address, 16)
+        elif pump_address.lower().endswith('h'):
+            address = int(pump_address[:-1], 16)
+        else:
+            # Try decimal first, then hex
+            try:
+                address = int(pump_address, 10)  # Try decimal first
+            except ValueError:
+                try:
+                    address = int(pump_address, 16)  # Then try hex
+                except ValueError:
+                    raise ValueError(f"Invalid address format: {pump_address}")
+        
+        # Validate address range
+        if not (protocol.MIN_PUMP_ADDRESS <= address <= protocol.MAX_PUMP_ADDRESS):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid pump address. Must be between 0x{protocol.MIN_PUMP_ADDRESS:02X} and 0x{protocol.MAX_PUMP_ADDRESS:02X}"
+            )
+        
+        # Check if serial connection is available
+        if not protocol.serial_conn or not protocol.serial_conn.is_open:
+            raise HTTPException(
+                status_code=503,
+                detail="Serial connection not available. Check COM port configuration."
+            )
+        
+        # Get filling information
+        logger.info(f"Getting filling information from pump 0x{address:02X}")
+        filling_info = protocol.get_filling_information(address)
+        
+        if filling_info is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Pump at address 0x{address:02X} is not responding or has no filling information"
+            )
+        
+        return ApiResponse(
+            success=True,
+            message=f"Filling information retrieved from pump 0x{address:02X}",
+            data=filling_info
+        )
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid address format: {pump_address}. Error: {str(e)}"
+        )
+    except Exception as e:
+        error_msg = str(e) if str(e) else "Unknown error occurred"
+        logger.error(f"Error getting filling information: {error_msg}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get filling information: {error_msg}"
+        )
+
+
 def get_status_name(status_code: int) -> str:
     """Convert status code to human-readable name"""
     status_map = {
